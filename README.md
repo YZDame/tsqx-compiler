@@ -1,6 +1,6 @@
 # TSQX Compiler
 
-Compile [TSQX](https://github.com/vEnhance/dotfiles/blob/main/py-scripts/tsqx.py) geometry files to high-quality PDF diagrams via [Asymptote](https://asymptote.sourceforge.io/), with **live preview**, **syntax highlighting**, and **auto-compile** — all inside VS Code.
+Compile [TSQX](https://github.com/vEnhance/tsqx) geometry files to high-quality PDF diagrams via [Asymptote](https://asymptote.sourceforge.io/), with **live preview**, **syntax highlighting**, and **auto-compile** — all inside VS Code.
 
 ## Features
 

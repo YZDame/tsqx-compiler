@@ -1,0 +1,93 @@
+# TSQX 编译器
+
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/LYDT.tsqx-compiler?label=VS%20Code%20Marketplace&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=LYDT.tsqx-compiler)
+[![安装量](https://img.shields.io/visual-studio-marketplace/i/LYDT.tsqx-compiler?logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=LYDT.tsqx-compiler)
+[![评分](https://img.shields.io/visual-studio-marketplace/r/LYDT.tsqx-compiler?logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=LYDT.tsqx-compiler)
+[![GitHub Stars](https://img.shields.io/github/stars/YZDame/tsqx-compiler?style=social)](https://github.com/YZDame/tsqx-compiler)
+[![许可证](https://img.shields.io/github/license/YZDame/tsqx-compiler)](https://github.com/YZDame/tsqx-compiler/blob/main/LICENSE)
+
+[English](README.md) | 简体中文
+
+在 VS Code 中将 [TSQX](https://github.com/vEnhance/tsqx) 几何图形文件编译为高质量的 PDF 图表（通过 [Asymptote](https://asymptote.sourceforge.io/)），支持**实时预览**、**语法高亮**和**自动编译**。
+
+## 功能特性
+
+- **实时预览** — 点击编辑器标题栏的预览图标，并排查看编译后的 PDF
+- **保存时自动编译** — 默认启用。每次保存 `.tsqx` 文件时，PDF 会自动重新编译和刷新
+- **语法高亮** — 完整的 `.tsqx` 文件 TextMate 语法支持：注释、点定义、绘制命令、内置函数、Asymptote 颜色名称和运算符
+- **TXT 文件支持** — 右键点击任意 `.txt` 文件，选择"设置为 TSQX 语言"即可获得完整 TSQX 支持
+- **内联诊断** — 编译错误和警告直接显示在编辑器的"问题"面板中
+- **状态栏** — 显示编译状态和自动编译开关（点击切换开/关）
+- **可配置路径** — 如果 `tsqx` 和 `asy` 不在 `$PATH` 中，可以指向自定义的可执行文件
+
+## 快速开始
+
+1. 打开一个 `.tsqx` 文件
+2. 点击编辑器工具栏中的**预览**图标（⧉）
+3. 编译后的 PDF 在侧面板中打开 — 编辑、保存后会自动刷新
+
+## 环境要求
+
+| 工具 | 安装方式 |
+|------|---------|
+| **tsqx** | `pip install tsqx` 或从仓库 `pip install -e .` |
+| **Asymptote** | `brew install asymptote` (macOS) / `apt install asymptote` (Linux) / [Windows 安装程序](https://asymptote.sourceforge.io/) |
+| **VS Code** | ≥ 1.109.0 |
+
+## 命令
+
+| 命令 | 快捷键 | 说明 |
+|---------|----------|-------------|
+| TSQX: 预览 TSQX 图形 | `Cmd+Shift+Alt+V` / `Ctrl+Shift+Alt+V` | 编译并打开 PDF 预览 |
+| TSQX: 编译 TSQX 文件 | `Cmd+Shift+B` / `Ctrl+Shift+B` | 编译为 ASY 和 PDF |
+| TSQX: 切换保存时自动编译 | — | 启用/禁用自动编译 |
+| TSQX: 设置当前文件为 TSQX | — | 将 `.txt` 文件标记为 TSQX |
+
+## 设置
+
+```jsonc
+{
+  "tsqx.autoCompileOnSave": true,   // 保存时自动编译（默认：true）
+  "tsqx.compilationTimeout": 30,    // 每次编译的最大秒数
+  "tsqx.tsqxPath": "tsqx",          // tsqx 可执行文件路径
+  "tsqx.asyPath": "asy",            // Asymptote 可执行文件路径
+  "tsqx.extraTsqxArgs": "-p"        // 额外的 CLI 参数（例如 "-p" 表示前导码，"-s 200" 表示大小）
+}
+```
+
+## 工作原理
+
+1. `tsqx -p < input.tsqx > output.asy` — 生成 Asymptote 源码
+2. `asy output.asy` — 编译为 PDF
+3. PDF 在 VS Code 的内置查看器中打开（或刷新）
+
+## 活动栏
+
+扩展在活动栏（左侧边栏）中添加了一个 **TSQX** 面板，包含快捷访问按钮：
+
+- **编译当前文件** — 运行 tsqx → asy → pdf 流水线
+- **预览 PDF** — 在侧面板中打开 PDF
+- **切换自动编译** — 开启/关闭保存时自动编译
+- **设置文件为 TSQX** — 将 `.txt` 文件标记为 TSQX
+
+## 开发
+
+```bash
+git clone https://github.com/yzdame/tsqx-compiler.git
+cd tsqx-compiler
+npm install
+npm run compile   # 构建一次
+npm run watch     # 监视模式，自动重新构建
+# 在 VS Code 中按 F5 启动扩展开发宿主
+```
+
+## 打包
+
+```bash
+npx vsce package
+# 生成 tsqx-compiler-x.x.x.vsix
+```
+
+## 许可证
+
+[MIT](LICENSE)

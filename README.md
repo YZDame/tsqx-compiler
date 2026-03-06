@@ -1,5 +1,11 @@
 # TSQX Compiler
 
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/LYDT.tsqx-compiler?label=VS%20Code%20Marketplace&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=LYDT.tsqx-compiler)
+[![Installs](https://img.shields.io/visual-studio-marketplace/i/LYDT.tsqx-compiler?logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=LYDT.tsqx-compiler)
+[![Rating](https://img.shields.io/visual-studio-marketplace/r/LYDT.tsqx-compiler?logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=LYDT.tsqx-compiler)
+[![GitHub Stars](https://img.shields.io/github/stars/YZDame/tsqx-compiler?style=social)](https://github.com/YZDame/tsqx-compiler)
+[![License](https://img.shields.io/github/license/YZDame/tsqx-compiler)](https://github.com/YZDame/tsqx-compiler/blob/main/LICENSE)
+
 Compile [TSQX](https://github.com/vEnhance/tsqx) geometry files to high-quality PDF diagrams via [Asymptote](https://asymptote.sourceforge.io/), with **live preview**, **syntax highlighting**, and **auto-compile** — all inside VS Code.
 
 ## Features

@@ -1,0 +1,8 @@
+out/
+dist/
+node_modules/
+.vscode-test/
+*.vsix
+.mypy_cache/
+*.js.map
+.DS_Store

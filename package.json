@@ -1,0 +1,213 @@
+{
+  "name": "tsqx-compiler",
+  "displayName": "TSQX Compiler",
+  "description": "Compile TSQX geometry files to Asymptote and PDF with live preview",
+  "version": "0.1.0",
+  "publisher": "yzdame",
+  "license": "MIT",
+  "icon": "images/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yzdame/tsqx-compiler"
+  },
+  "engines": {
+    "vscode": "^1.109.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "keywords": [
+    "tsqx",
+    "asymptote",
+    "geometry",
+    "math",
+    "diagram",
+    "preview"
+  ],
+  "activationEvents": [
+    "onLanguage:tsqx",
+    "workspaceContains:**/*.tsqx"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "tsqx-explorer",
+          "title": "TSQX",
+          "icon": "images/sidebar-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "tsqx-explorer": [
+        {
+          "id": "tsqx-commands",
+          "name": "Commands"
+        }
+      ]
+    },
+    "languages": [
+      {
+        "id": "tsqx",
+        "aliases": [
+          "TSQX",
+          "tsqx"
+        ],
+        "extensions": [
+          ".tsqx"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "tsqx",
+        "scopeName": "source.tsqx",
+        "path": "./syntaxes/tsqx.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "tsqx.preview",
+        "title": "Preview TSQX Figure",
+        "icon": "$(open-preview)",
+        "category": "TSQX"
+      },
+      {
+        "command": "tsqx.compile",
+        "title": "Compile TSQX File",
+        "icon": "$(play)",
+        "category": "TSQX"
+      },
+      {
+        "command": "tsqx.toggleAutoCompile",
+        "title": "Toggle Auto Compile on Save",
+        "category": "TSQX"
+      },
+      {
+        "command": "tsqx.setLanguage",
+        "title": "Set Current File as TSQX",
+        "category": "TSQX"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "tsqx.preview",
+          "when": "resourceLangId == tsqx",
+          "group": "navigation"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "tsqx.compile",
+          "when": "view == tsqx-commands",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "tsqx.compile",
+          "when": "resourceLangId == tsqx",
+          "group": "7_modification"
+        },
+        {
+          "command": "tsqx.preview",
+          "when": "resourceLangId == tsqx",
+          "group": "7_modification"
+        },
+        {
+          "command": "tsqx.setLanguage",
+          "when": "resourceLangId == plaintext && resourceExtname == .txt",
+          "group": "7_modification"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "tsqx.compile",
+          "when": "resourceExtname == .tsqx",
+          "group": "7_modification"
+        },
+        {
+          "command": "tsqx.preview",
+          "when": "resourceExtname == .tsqx",
+          "group": "7_modification"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "tsqx.setLanguage",
+          "when": "editorLangId == plaintext"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "tsqx.preview",
+        "key": "ctrl+shift+alt+v",
+        "mac": "cmd+shift+alt+v",
+        "when": "resourceLangId == tsqx"
+      },
+      {
+        "command": "tsqx.compile",
+        "key": "ctrl+shift+b",
+        "mac": "cmd+shift+b",
+        "when": "resourceLangId == tsqx"
+      }
+    ],
+    "configuration": {
+      "title": "TSQX Compiler",
+      "properties": {
+        "tsqx.autoCompileOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically compile TSQX files when saved and refresh preview"
+        },
+        "tsqx.compilationTimeout": {
+          "type": "number",
+          "default": 30,
+          "minimum": 5,
+          "maximum": 120,
+          "description": "Maximum compilation time in seconds"
+        },
+        "tsqx.tsqxPath": {
+          "type": "string",
+          "default": "tsqx",
+          "description": "Path to the tsqx executable"
+        },
+        "tsqx.asyPath": {
+          "type": "string",
+          "default": "asy",
+          "description": "Path to the Asymptote (asy) executable"
+        },
+        "tsqx.extraTsqxArgs": {
+          "type": "string",
+          "default": "-p",
+          "description": "Extra arguments to pass to tsqx CLI (e.g. -p for preamble, -s 200 for size)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.109.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "typescript-eslint": "^8.56.1",
+    "eslint": "^9.39.3",
+    "typescript": "^5.9.3",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.0.0"
+  }
+}

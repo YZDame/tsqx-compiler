@@ -1,0 +1,122 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "TSQX",
+    "scopeName": "source.tsqx",
+    "patterns": [
+        {
+            "include": "#comments"
+        },
+        {
+            "include": "#special-commands"
+        },
+        {
+            "include": "#point-definition"
+        },
+        {
+            "include": "#draw-command"
+        },
+        {
+            "include": "#direct-command"
+        },
+        {
+            "include": "#numbers"
+        },
+        {
+            "include": "#operators"
+        },
+        {
+            "include": "#colors"
+        },
+        {
+            "include": "#builtins"
+        }
+    ],
+    "repository": {
+        "comments": {
+            "match": "#.*$",
+            "name": "comment.line.number-sign.tsqx"
+        },
+        "special-commands": {
+            "match": "^~(triangle|regular)\\b",
+            "name": "keyword.control.special.tsqx"
+        },
+        "point-definition": {
+            "match": "^([A-Z][A-Za-z_']*)\\s+(\\d+(?:\\s+[A-Z]+)?\\s+)?=\\s+(.*)",
+            "captures": {
+                "1": {
+                    "name": "variable.other.point.tsqx"
+                },
+                "3": {
+                    "patterns": [
+                        {
+                            "include": "#builtins"
+                        },
+                        {
+                            "include": "#numbers"
+                        },
+                        {
+                            "include": "#point-reference"
+                        }
+                    ]
+                }
+            }
+        },
+        "draw-command": {
+            "match": "^([A-Z][A-Za-z_']*(?:\\s*--\\s*[A-Z][A-Za-z_']*)*(?:\\s*--\\s*cycle)?|incircle|circumcircle|unitcircle|CP|CR|Line)(.*)$",
+            "captures": {
+                "1": {
+                    "name": "entity.name.function.draw.tsqx"
+                },
+                "2": {
+                    "patterns": [
+                        {
+                            "include": "#pen-separator"
+                        },
+                        {
+                            "include": "#colors"
+                        },
+                        {
+                            "include": "#numbers"
+                        },
+                        {
+                            "include": "#point-reference"
+                        }
+                    ]
+                }
+            }
+        },
+        "direct-command": {
+            "match": "^!(.*)$",
+            "captures": {
+                "1": {
+                    "name": "meta.embedded.asy.tsqx"
+                }
+            },
+            "name": "keyword.operator.direct.tsqx"
+        },
+        "builtins": {
+            "match": "\\b(dir|incenter|circumcenter|orthocenter|centroid|midpoint|foot|extension|incircle|circumcircle|unitcircle|CP|CR|IP|OP|Line|cycle|triangle|regular|abs|conj|reflect|rotate|shift|scale)\\b",
+            "name": "support.function.builtin.tsqx"
+        },
+        "point-reference": {
+            "match": "\\b([A-Z][A-Za-z_']*)\\b",
+            "name": "variable.other.point.tsqx"
+        },
+        "numbers": {
+            "match": "\\b\\d+(\\.\\d+)?\\b",
+            "name": "constant.numeric.tsqx"
+        },
+        "operators": {
+            "match": "(--|\\.\\.|-|\\+|\\*|/|=|\\^\\^)",
+            "name": "keyword.operator.tsqx"
+        },
+        "pen-separator": {
+            "match": "\\s/\\s",
+            "name": "punctuation.separator.pen.tsqx"
+        },
+        "colors": {
+            "match": "\\b(red|blue|green|yellow|orange|purple|cyan|magenta|black|white|gray|grey|lightblue|lightcyan|lightgreen|lightyellow|lightgray|lightred|darkblue|darkgreen|darkred|darkcyan|darkgray|brown|pink|olive|heavygreen|heavyblue|heavyred|heavycyan|deepgreen|deepblue|deepred|palered|paleblue|palegreen|paleyellow|palecyan|defaultpen|opacity)\\b",
+            "name": "support.constant.color.tsqx"
+        }
+    }
+}

@@ -23,7 +23,7 @@ This repository contains a VS Code extension for compiling `.tsqx` files into `.
 - Small changes stay as normal local git commits without a version bump.
 - Versioned releases must update `CHANGELOG.md` and bump `package.json` with `npm version patch|minor|major`.
 - Push the version commit and tag together using `git push origin main --follow-tags`.
-- Tag pushes like `v0.1.1` trigger GitHub Release packaging and optional npm / VS Code Marketplace publishing.
+- Tag pushes like `v0.1.1` trigger GitHub Release packaging and optional VS Code Marketplace publishing.
 
 ## Validation
 

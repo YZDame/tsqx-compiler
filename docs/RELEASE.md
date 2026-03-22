@@ -61,12 +61,10 @@ Pushing a tag like `v0.1.1` triggers `.github/workflows/release.yml`, which:
 - runs `npm run check`
 - builds a `.vsix`
 - creates a GitHub Release and uploads the `.vsix`
-- publishes to npm when `NPM_TOKEN` is configured
 - publishes to the VS Code Marketplace when `VSCE_PAT` is configured
 
 ## Required Secrets
 
-- `NPM_TOKEN`: npm publish token
 - `VSCE_PAT`: Visual Studio Marketplace personal access token
 
 GitHub Release creation uses the default `GITHUB_TOKEN`.

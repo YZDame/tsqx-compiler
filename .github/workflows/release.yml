@@ -20,7 +20,6 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          registry-url: https://registry.npmjs.org
 
       - name: Verify tag matches package version
         run: |
@@ -45,12 +44,6 @@ jobs:
         with:
           files: tsqx-compiler-${{ github.ref_name }}.vsix
           generate_release_notes: true
-
-      - name: Publish to npm
-        if: ${{ secrets.NPM_TOKEN != '' }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public
 
       - name: Publish to VS Code Marketplace
         if: ${{ secrets.VSCE_PAT != '' }}

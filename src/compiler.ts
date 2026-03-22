@@ -29,6 +29,7 @@ export async function compileTsqx(
   const basename = path.basename(tsqxFilePath, path.extname(tsqxFilePath));
   const asyFilePath = path.join(dir, `${basename}.asy`);
   const pdfPath = path.join(dir, `${basename}.pdf`);
+  const pdfOutputBase = path.join(dir, basename);
   const timeoutMs = options.timeout * 1000;
 
   const errors: string[] = [];
@@ -53,7 +54,7 @@ export async function compileTsqx(
 
   // Step 2: ASY → PDF
   try {
-    const asyCmd = `${shellQuote(options.asyPath)} ${shellQuote(asyFilePath)}`;
+    const asyCmd = `${shellQuote(options.asyPath)} -f pdf -o ${shellQuote(pdfOutputBase)} ${shellQuote(asyFilePath)}`;
     const { stderr } = await execAsync(asyCmd, {
       timeout: timeoutMs,
       cwd: dir,

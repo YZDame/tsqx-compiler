@@ -2,6 +2,19 @@
 
 All notable changes to the TSQX Compiler extension will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- Configurable `tsqx.autoCompileDelay` setting with a default of 1000 ms
+- Command to open the generated `.asy` file directly from the extension
+- Toolchain diagnosis command for checking `tsqx`, `asy`, and extension settings
+- Local smoke test script for real `tsqx` -> `asy` -> `pdf` verification
+- GitHub Actions CI and release workflows
+- Release process documentation and repository agent guidance
+
+### Fixed
+- Asymptote PDF output now targets the source file directory reliably
+
 ## [0.1.0] - 2026-03-06
 
 ### Added

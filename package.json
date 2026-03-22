@@ -82,6 +82,18 @@
         "category": "TSQX"
       },
       {
+        "command": "tsqx.openGeneratedAsy",
+        "title": "Open Generated ASY",
+        "icon": "$(code)",
+        "category": "TSQX"
+      },
+      {
+        "command": "tsqx.diagnoseToolchain",
+        "title": "Diagnose Toolchain",
+        "icon": "$(tools)",
+        "category": "TSQX"
+      },
+      {
         "command": "tsqx.toggleAutoCompile",
         "title": "Toggle Auto Compile on Save",
         "category": "TSQX"
@@ -98,6 +110,11 @@
           "command": "tsqx.preview",
           "when": "resourceLangId == tsqx",
           "group": "navigation"
+        },
+        {
+          "command": "tsqx.openGeneratedAsy",
+          "when": "resourceLangId == tsqx",
+          "group": "navigation@1"
         }
       ],
       "view/title": [
@@ -105,6 +122,11 @@
           "command": "tsqx.compile",
           "when": "view == tsqx-commands",
           "group": "navigation"
+        },
+        {
+          "command": "tsqx.diagnoseToolchain",
+          "when": "view == tsqx-commands",
+          "group": "navigation@1"
         }
       ],
       "editor/context": [
@@ -115,6 +137,16 @@
         },
         {
           "command": "tsqx.preview",
+          "when": "resourceLangId == tsqx",
+          "group": "7_modification"
+        },
+        {
+          "command": "tsqx.openGeneratedAsy",
+          "when": "resourceLangId == tsqx",
+          "group": "7_modification"
+        },
+        {
+          "command": "tsqx.diagnoseToolchain",
           "when": "resourceLangId == tsqx",
           "group": "7_modification"
         },
@@ -134,12 +166,25 @@
           "command": "tsqx.preview",
           "when": "resourceExtname == .tsqx",
           "group": "7_modification"
+        },
+        {
+          "command": "tsqx.openGeneratedAsy",
+          "when": "resourceExtname == .tsqx",
+          "group": "7_modification"
+        },
+        {
+          "command": "tsqx.diagnoseToolchain",
+          "when": "resourceExtname == .tsqx",
+          "group": "7_modification"
         }
       ],
       "commandPalette": [
         {
           "command": "tsqx.setLanguage",
           "when": "editorLangId == plaintext"
+        },
+        {
+          "command": "tsqx.diagnoseToolchain"
         }
       ]
     },
@@ -164,6 +209,12 @@
           "type": "boolean",
           "default": true,
           "description": "Automatically compile TSQX files when saved and refresh preview"
+        },
+        "tsqx.autoCompileDelay": {
+          "type": "number",
+          "default": 1000,
+          "minimum": 0,
+          "description": "Delay in milliseconds before auto-compiling after save"
         },
         "tsqx.compilationTimeout": {
           "type": "number",
@@ -194,10 +245,16 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
+    "check": "npm run compile && npm run lint && npm test",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
     "test": "vscode-test",
-    "package": "vsce package"
+    "smoke:compile": "node ./scripts/smoke-compile.mjs",
+    "package:vsix": "vsce package",
+    "package": "npm run package:vsix"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "devDependencies": {
     "@types/vscode": "^1.109.0",

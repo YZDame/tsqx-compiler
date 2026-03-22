@@ -1,15 +1,27 @@
 import * as assert from 'assert';
-
-// You can import and use all API from the 'vscode' module
-// as well as import your extension to test it
 import * as vscode from 'vscode';
-// import * as myExtension from '../../extension';
 
 suite('Extension Test Suite', () => {
-	vscode.window.showInformationMessage('Start all tests.');
+	test('registers TSQX commands on activation', async () => {
+		const extension = vscode.extensions.getExtension('LYDT.tsqx-compiler');
+		assert.ok(extension, 'Extension should be discoverable by id');
 
-	test('Sample test', () => {
-		assert.strictEqual(-1, [1, 2, 3].indexOf(5));
-		assert.strictEqual(-1, [1, 2, 3].indexOf(0));
+		await extension?.activate();
+
+		const commands = await vscode.commands.getCommands(true);
+		assert.ok(commands.includes('tsqx.compile'));
+		assert.ok(commands.includes('tsqx.preview'));
+		assert.ok(commands.includes('tsqx.openGeneratedAsy'));
+		assert.ok(commands.includes('tsqx.diagnoseToolchain'));
+		assert.ok(commands.includes('tsqx.toggleAutoCompile'));
+		assert.ok(commands.includes('tsqx.setLanguage'));
+	});
+
+	test('exposes default configuration values', () => {
+		const config = vscode.workspace.getConfiguration('tsqx');
+
+		assert.strictEqual(config.get('autoCompileOnSave'), true);
+		assert.strictEqual(config.get('autoCompileDelay'), 1000);
+		assert.strictEqual(config.get('compilationTimeout'), 30);
 	});
 });

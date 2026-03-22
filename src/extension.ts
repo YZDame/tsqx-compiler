@@ -1,8 +1,12 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
 import { compileTsqx, createDiagnostics } from './compiler';
 import { TsqxSidebarProvider } from './sidebarProvider';
+
+const execFileAsync = promisify(execFile);
 
 let diagnosticCollection: vscode.DiagnosticCollection;
 let statusBarItem: vscode.StatusBarItem;
@@ -17,6 +21,10 @@ function isTsqxFile(doc: vscode.TextDocument): boolean {
 
 function getConfig() {
 	return vscode.workspace.getConfiguration('tsqx');
+}
+
+function getAutoCompileDelay(): number {
+	return Math.max(0, getConfig().get<number>('autoCompileDelay', 1000));
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -71,6 +79,26 @@ export function activate(context: vscode.ExtensionContext) {
 		})
 	);
 
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tsqx.openGeneratedAsy', async (uri?: vscode.Uri) => {
+			const filePath = resolveFilePath(uri);
+			if (!filePath) { return; }
+			const asyPath = getAsyPath(filePath);
+			if (!fs.existsSync(asyPath)) {
+				const result = await compileFile(filePath);
+				if (!result || !result.success) { return; }
+			}
+			const document = await vscode.workspace.openTextDocument(vscode.Uri.file(asyPath));
+			await vscode.window.showTextDocument(document, { preview: true, viewColumn: vscode.ViewColumn.Beside });
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tsqx.diagnoseToolchain', async () => {
+			await diagnoseToolchain();
+		})
+	);
+
 	// Toggle auto-compile
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tsqx.toggleAutoCompile', async () => {
@@ -100,6 +128,7 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.workspace.onDidSaveTextDocument(async (doc) => {
 			if (!isTsqxFile(doc)) { return; }
 			if (!getConfig().get<boolean>('autoCompileOnSave', true)) { return; }
+			const autoCompileDelay = getAutoCompileDelay();
 
 			if (compileDebounceTimer) {
 				clearTimeout(compileDebounceTimer);
@@ -109,7 +138,7 @@ export function activate(context: vscode.ExtensionContext) {
 				if (result && result.success) {
 					refreshOpenPdf(result.pdfPath);
 				}
-			}, 300);
+			}, autoCompileDelay);
 		})
 	);
 
@@ -158,6 +187,12 @@ function getPdfPath(tsqxFilePath: string): string {
 	const dir = path.dirname(tsqxFilePath);
 	const basename = path.basename(tsqxFilePath, path.extname(tsqxFilePath));
 	return path.join(dir, `${basename}.pdf`);
+}
+
+function getAsyPath(tsqxFilePath: string): string {
+	const dir = path.dirname(tsqxFilePath);
+	const basename = path.basename(tsqxFilePath, path.extname(tsqxFilePath));
+	return path.join(dir, `${basename}.asy`);
 }
 
 /** Compile a TSQX file and return the result */
@@ -214,6 +249,111 @@ async function compileFile(filePath: string) {
 	} finally {
 		isCompiling = false;
 	}
+}
+
+async function diagnoseToolchain(): Promise<void> {
+	const config = getConfig();
+	const tsqxPath = config.get<string>('tsqxPath', 'tsqx');
+	const asyPath = config.get<string>('asyPath', 'asy');
+	const extraArgs = config.get<string>('extraTsqxArgs', '-p');
+	const timeout = config.get<number>('compilationTimeout', 30);
+	const autoCompileOnSave = config.get<boolean>('autoCompileOnSave', true);
+	const autoCompileDelay = getAutoCompileDelay();
+	const workspaceFolders = vscode.workspace.workspaceFolders?.map(folder => folder.uri.fsPath) ?? [];
+
+	outputChannel.clear();
+	outputChannel.appendLine('TSQX Toolchain Diagnosis');
+	outputChannel.appendLine(`Timestamp: ${new Date().toISOString()}`);
+	outputChannel.appendLine('');
+	outputChannel.appendLine('Configuration');
+	outputChannel.appendLine(`- tsqxPath: ${tsqxPath}`);
+	outputChannel.appendLine(`- asyPath: ${asyPath}`);
+	outputChannel.appendLine(`- extraTsqxArgs: ${extraArgs}`);
+	outputChannel.appendLine(`- compilationTimeout: ${timeout}s`);
+	outputChannel.appendLine(`- autoCompileOnSave: ${autoCompileOnSave}`);
+	outputChannel.appendLine(`- autoCompileDelay: ${autoCompileDelay}ms`);
+	outputChannel.appendLine(`- workspaceFolders: ${workspaceFolders.length > 0 ? workspaceFolders.join(', ') : '(none)'}`);
+	outputChannel.appendLine('');
+
+	const tsqxCheck = await runToolCheck('tsqx', tsqxPath, ['--help']);
+	const asyCheck = await runToolCheck('asy', asyPath, ['--version']);
+
+	logToolCheck(tsqxCheck);
+	logToolCheck(asyCheck);
+
+	outputChannel.show(true);
+
+	const failedChecks = [tsqxCheck, asyCheck].filter(check => !check.ok);
+	if (failedChecks.length === 0) {
+		vscode.window.showInformationMessage('TSQX toolchain diagnosis passed. See "TSQX Compiler" output for details.');
+	} else {
+		vscode.window.showWarningMessage(
+			`TSQX toolchain diagnosis found ${failedChecks.length} problem(s). See "TSQX Compiler" output for details.`
+		);
+	}
+}
+
+interface ToolCheckResult {
+	label: string;
+	ok: boolean;
+	command: string;
+	args: string[];
+	summary: string;
+	details: string[];
+}
+
+async function runToolCheck(label: string, command: string, args: string[]): Promise<ToolCheckResult> {
+	try {
+		const { stdout, stderr } = await execFileAsync(command, args, { timeout: 10_000 });
+		const mergedOutput = [stdout, stderr].filter(Boolean).join('\n');
+		const summary = firstUsefulLine(mergedOutput) || 'Command executed successfully.';
+		return {
+			label,
+			ok: true,
+			command,
+			args,
+			summary,
+			details: formatOutputDetails(mergedOutput),
+		};
+	} catch (error: any) {
+		const mergedOutput = [error.stdout, error.stderr, error.message].filter(Boolean).join('\n');
+		return {
+			label,
+			ok: false,
+			command,
+			args,
+			summary: firstUsefulLine(mergedOutput) || 'Command failed.',
+			details: formatOutputDetails(mergedOutput),
+		};
+	}
+}
+
+function logToolCheck(result: ToolCheckResult): void {
+	outputChannel.appendLine(`${result.ok ? '[OK]' : '[FAIL]'} ${result.label}`);
+	outputChannel.appendLine(`- command: ${result.command} ${result.args.join(' ')}`.trim());
+	outputChannel.appendLine(`- summary: ${result.summary}`);
+	if (result.details.length > 0) {
+		outputChannel.appendLine('- details:');
+		for (const line of result.details) {
+			outputChannel.appendLine(`  ${line}`);
+		}
+	}
+	outputChannel.appendLine('');
+}
+
+function firstUsefulLine(output: string): string | undefined {
+	return output
+		.split(/\r?\n/)
+		.map(line => line.trim())
+		.find(line => line.length > 0);
+}
+
+function formatOutputDetails(output: string): string[] {
+	return output
+		.split(/\r?\n/)
+		.map(line => line.trim())
+		.filter(line => line.length > 0)
+		.slice(0, 5);
 }
 
 /** Open PDF in a side column (preview only, no compile) */
@@ -293,4 +433,3 @@ export function deactivate() {
 		clearTimeout(compileDebounceTimer);
 	}
 }
-

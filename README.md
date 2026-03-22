@@ -40,6 +40,8 @@ Compile [TSQX](https://github.com/vEnhance/tsqx) geometry files to high-quality 
 |---------|----------|-------------|
 | TSQX: Preview TSQX Figure | `Cmd+Shift+Alt+V` / `Ctrl+Shift+Alt+V` | Compile and open PDF preview |
 | TSQX: Compile TSQX File | `Cmd+Shift+B` / `Ctrl+Shift+B` | Compile to ASY and PDF |
+| TSQX: Open Generated ASY | — | Open the generated `.asy` file beside the editor |
+| TSQX: Diagnose Toolchain | — | Check `tsqx` / `asy` commands, versions, and current extension settings |
 | TSQX: Toggle Auto Compile on Save | — | Enable / disable auto-compile |
 | TSQX: Set Current File as TSQX | — | Mark a `.txt` file as TSQX |
 
@@ -48,12 +50,36 @@ Compile [TSQX](https://github.com/vEnhance/tsqx) geometry files to high-quality 
 ```jsonc
 {
   "tsqx.autoCompileOnSave": true,   // auto-compile on save (default: true)
+  "tsqx.autoCompileDelay": 1000,    // delay in ms before auto-compile after save
   "tsqx.compilationTimeout": 30,    // max seconds per compilation
   "tsqx.tsqxPath": "tsqx",          // path to tsqx executable
   "tsqx.asyPath": "asy",            // path to Asymptote executable
   "tsqx.extraTsqxArgs": "-p"        // extra CLI args (e.g. "-p" for preamble, "-s 200" for size)
 }
 ```
+
+## Development
+
+```bash
+npm ci
+npm run compile
+npm run lint
+npm test
+```
+
+For a real local smoke test against the installed `tsqx` and `asy` toolchain:
+
+```bash
+npm run smoke:compile -- /path/to/file.tsqx
+```
+
+Example:
+
+```bash
+npm run smoke:compile -- /Users/leyudame/Documents/tsqx/examples/figures/fig1.tsqx
+```
+
+Release workflow details are documented in [docs/RELEASE.md](./docs/RELEASE.md).
 
 ## How It Works
 

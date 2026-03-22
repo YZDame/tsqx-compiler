@@ -40,6 +40,8 @@
 |---------|----------|-------------|
 | TSQX: 预览 TSQX 图形 | `Cmd+Shift+Alt+V` / `Ctrl+Shift+Alt+V` | 编译并打开 PDF 预览 |
 | TSQX: 编译 TSQX 文件 | `Cmd+Shift+B` / `Ctrl+Shift+B` | 编译为 ASY 和 PDF |
+| TSQX: 打开生成的 ASY | — | 在编辑器旁边打开生成的 `.asy` 文件 |
+| TSQX: 诊断工具链 | — | 检查 `tsqx` / `asy` 命令、版本和当前扩展设置 |
 | TSQX: 切换保存时自动编译 | — | 启用/禁用自动编译 |
 | TSQX: 设置当前文件为 TSQX | — | 将 `.txt` 文件标记为 TSQX |
 
@@ -48,12 +50,36 @@
 ```jsonc
 {
   "tsqx.autoCompileOnSave": true,   // 保存时自动编译（默认：true）
+  "tsqx.autoCompileDelay": 1000,    // 保存后自动编译前的延迟（毫秒）
   "tsqx.compilationTimeout": 30,    // 每次编译的最大秒数
   "tsqx.tsqxPath": "tsqx",          // tsqx 可执行文件路径
   "tsqx.asyPath": "asy",            // Asymptote 可执行文件路径
   "tsqx.extraTsqxArgs": "-p"        // 额外的 CLI 参数（例如 "-p" 表示前导码，"-s 200" 表示大小）
 }
 ```
+
+## 开发
+
+```bash
+npm ci
+npm run compile
+npm run lint
+npm test
+```
+
+如果本机已经安装了 `tsqx` 和 `asy`，可以直接做一次真实 smoke test：
+
+```bash
+npm run smoke:compile -- /path/to/file.tsqx
+```
+
+例如：
+
+```bash
+npm run smoke:compile -- /Users/leyudame/Documents/tsqx/examples/figures/fig1.tsqx
+```
+
+发布流程见 [docs/RELEASE.md](./docs/RELEASE.md)。
 
 ## 工作原理
 

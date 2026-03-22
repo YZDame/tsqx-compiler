@@ -2,7 +2,7 @@
   "name": "tsqx-compiler",
   "displayName": "TSQX Compiler",
   "description": "Compile TSQX geometry files to Asymptote and PDF with live preview",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "LYDT",
   "license": "MIT",
   "icon": "images/icon.png",

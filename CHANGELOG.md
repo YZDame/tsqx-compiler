@@ -2,7 +2,7 @@
 
 All notable changes to the TSQX Compiler extension will be documented in this file.
 
-## [Unreleased]
+## [0.2.0] - 2026-03-22
 
 ### Added
 - Configurable `tsqx.autoCompileDelay` setting with a default of 1000 ms

@@ -18,7 +18,7 @@ export function resolveOutputDirectory(
     .replaceAll('${fileDirname}', sourceDirectory)
     .replaceAll('${workspaceFolder}', workspaceFolder || sourceDirectory);
   const root = path.isAbsolute(expanded)
-    ? expanded
+    ? path.normalize(expanded)
     : path.resolve(workspaceFolder || sourceDirectory, expanded);
 
   if (configured.includes('${fileDirname}')) {

@@ -19,6 +19,9 @@ All notable changes to the TSQX Compiler extension will be documented in this fi
 - Completion for builtins, document points, colors, and pen styles
 - Hover documentation, document symbols, and current-file go-to-definition
 - Syntax highlighting for numbered points, label flags, and direction modifiers used by the TSQX parser
+- Persistent SVG live preview that preserves its panel, zoom, and scroll state across refreshes
+- Explicit PDF opening plus SVG and configurable-DPI PNG export commands
+- `pdftocairo` diagnosis and safe PDF-conversion fallback behavior
 
 ### Fixed
 - Make status-bar error clicks open compiler output and keep auto-compile toggles scoped to the workspace

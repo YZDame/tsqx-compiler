@@ -36,7 +36,7 @@ export interface OutputPaths {
   pdfPath: string;
 }
 
-interface ProcessResult {
+export interface ProcessResult {
   stdout: string;
   stderr: string;
 }
@@ -184,7 +184,7 @@ export function splitCommandLine(value: string): string[] {
   return args;
 }
 
-function runProcess(
+export function runProcess(
   command: string,
   args: readonly string[],
   options: { cwd: string; input?: string; timeoutMs: number }

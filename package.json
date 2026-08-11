@@ -88,6 +88,24 @@
         "category": "TSQX"
       },
       {
+        "command": "tsqx.openPdf",
+        "title": "Open Generated PDF",
+        "icon": "$(file-pdf)",
+        "category": "TSQX"
+      },
+      {
+        "command": "tsqx.exportSvg",
+        "title": "Export Figure as SVG",
+        "icon": "$(file-media)",
+        "category": "TSQX"
+      },
+      {
+        "command": "tsqx.exportPng",
+        "title": "Export Figure as PNG",
+        "icon": "$(file-media)",
+        "category": "TSQX"
+      },
+      {
         "command": "tsqx.compile",
         "title": "Compile TSQX File",
         "icon": "$(play)",
@@ -182,6 +200,21 @@
           "group": "7_modification"
         },
         {
+          "command": "tsqx.openPdf",
+          "when": "resourceLangId == tsqx",
+          "group": "7_modification"
+        },
+        {
+          "command": "tsqx.exportSvg",
+          "when": "resourceLangId == tsqx",
+          "group": "7_modification"
+        },
+        {
+          "command": "tsqx.exportPng",
+          "when": "resourceLangId == tsqx",
+          "group": "7_modification"
+        },
+        {
           "command": "tsqx.openGeneratedAsy",
           "when": "resourceLangId == tsqx",
           "group": "7_modification"
@@ -210,6 +243,21 @@
         },
         {
           "command": "tsqx.preview",
+          "when": "resourceExtname == .tsqx",
+          "group": "7_modification"
+        },
+        {
+          "command": "tsqx.openPdf",
+          "when": "resourceExtname == .tsqx",
+          "group": "7_modification"
+        },
+        {
+          "command": "tsqx.exportSvg",
+          "when": "resourceExtname == .tsqx",
+          "group": "7_modification"
+        },
+        {
+          "command": "tsqx.exportPng",
           "when": "resourceExtname == .tsqx",
           "group": "7_modification"
         },
@@ -284,6 +332,18 @@
           "default": "asy",
           "description": "Path to the Asymptote (asy) executable"
         },
+        "tsqx.pdfConverterPath": {
+          "type": "string",
+          "default": "pdftocairo",
+          "description": "Path to pdftocairo for persistent SVG preview and SVG/PNG export"
+        },
+        "tsqx.pngDpi": {
+          "type": "number",
+          "default": 144,
+          "minimum": 72,
+          "maximum": 600,
+          "description": "Resolution in DPI for PNG exports"
+        },
         "tsqx.outputDirectory": {
           "type": "string",
           "default": "",
@@ -318,6 +378,8 @@
     "smoke:compile": "node ./scripts/smoke-compile.mjs",
     "presmoke:templates": "npm run compile",
     "smoke:templates": "node ./scripts/smoke-templates.mjs",
+    "presmoke:export": "npm run compile",
+    "smoke:export": "node ./scripts/smoke-export.mjs",
     "package:vsix": "vsce package",
     "package": "npm run package:vsix"
   },

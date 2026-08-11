@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as crypto from 'crypto';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import {
@@ -16,6 +17,8 @@ import { resolveOutputDirectory } from './outputDirectory';
 import { TsqxSidebarProvider } from './sidebarProvider';
 import { registerLanguageFeatures } from './languageFeatures';
 import { openFigureTemplate } from './templates';
+import { convertPdf, ExportFormat } from './pdfConverter';
+import { PreviewManager } from './previewManager';
 
 const execFileAsync = promisify(execFile);
 
@@ -27,6 +30,8 @@ const compileCoordinator = new CompileCoordinator<CompilationResult | undefined>
 const activeCompiles = new Set<string>();
 let statusResetTimer: ReturnType<typeof setTimeout> | undefined;
 let sidebarProvider: TsqxSidebarProvider;
+let previewManager: PreviewManager;
+let extensionContext: vscode.ExtensionContext;
 
 function isTsqxFile(doc: vscode.TextDocument): boolean {
 	return doc.languageId === 'tsqx' || doc.uri.fsPath.endsWith('.tsqx');
@@ -41,6 +46,7 @@ function getAutoCompileDelay(uri?: vscode.Uri): number {
 }
 
 export function activate(context: vscode.ExtensionContext) {
+	extensionContext = context;
 	// Output channel for detailed logs
 	outputChannel = vscode.window.createOutputChannel('TSQX Compiler');
 	context.subscriptions.push(outputChannel);
@@ -61,6 +67,8 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.registerTreeDataProvider('tsqx-commands', sidebarProvider)
 	);
 	registerLanguageFeatures(context);
+	previewManager = new PreviewManager();
+	context.subscriptions.push(previewManager);
 
 	// --- Commands ---
 
@@ -78,7 +86,7 @@ export function activate(context: vscode.ExtensionContext) {
 			const result = await compileFile(filePath);
 			// If PDF preview is already open, refresh it
 			if (result && result.success) {
-				refreshOpenPdf(result.pdfPath);
+				await refreshOpenPreview(filePath, result.pdfPath);
 			}
 		})
 	);
@@ -94,7 +102,32 @@ export function activate(context: vscode.ExtensionContext) {
 				const result = await compileFile(filePath);
 				if (!result || !result.success) { return; }
 			}
+			await showLivePreview(filePath, pdfPath, true);
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tsqx.openPdf', async (uri?: vscode.Uri) => {
+			const filePath = resolveFilePath(uri);
+			if (!filePath) { return; }
+			const pdfPath = getPdfPath(filePath);
+			if (await isOutputStale(filePath, pdfPath)) {
+				const result = await compileFile(filePath);
+				if (!result?.success) { return; }
+			}
 			openPdfPreview(pdfPath);
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tsqx.exportSvg', async (uri?: vscode.Uri) => {
+			await exportFigure('svg', uri);
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tsqx.exportPng', async (uri?: vscode.Uri) => {
+			await exportFigure('png', uri);
 		})
 	);
 
@@ -185,7 +218,7 @@ export function activate(context: vscode.ExtensionContext) {
 				compileDebounceTimers.delete(filePath);
 				const result = await compileFile(filePath, true);
 				if (result && result.success) {
-					refreshOpenPdf(result.pdfPath);
+					await refreshOpenPreview(filePath, result.pdfPath);
 				}
 			}, autoCompileDelay);
 			compileDebounceTimers.set(filePath, timer);
@@ -365,7 +398,7 @@ async function compileWorkspace(): Promise<void> {
 			const result = await compileFile(file.fsPath, false, false);
 			if (result?.success) {
 				succeeded += 1;
-				refreshOpenPdf(result.pdfPath);
+				await refreshOpenPreview(file.fsPath, result.pdfPath);
 			} else {
 				failed += 1;
 			}
@@ -406,6 +439,8 @@ async function cleanArtifacts(uri?: vscode.Uri): Promise<void> {
 	}
 	await Promise.all(existing.map(file => fs.promises.rm(file, { force: true })));
 	diagnosticCollection.delete(vscode.Uri.file(asyPath));
+	previewManager.close(filePath);
+	await fs.promises.rm(getPreviewSvgPath(filePath), { force: true });
 	vscode.window.showInformationMessage(`Deleted ${existing.length} generated TSQX artifact(s).`);
 }
 
@@ -415,15 +450,18 @@ async function runSetupWizard(context: vscode.ExtensionContext): Promise<void> {
 	const config = getConfig();
 	const tsqxPath = config.get<string>('tsqxPath', 'tsqx');
 	const asyPath = config.get<string>('asyPath', 'asy');
-	const [tsqxCheck, asyCheck] = await vscode.window.withProgress({
+	const pdfConverterPath = config.get<string>('pdfConverterPath', 'pdftocairo');
+	const [tsqxCheck, asyCheck, converterCheck] = await vscode.window.withProgress({
 		location: vscode.ProgressLocation.Notification,
 		title: 'Checking TSQX toolchain',
 	}, () => Promise.all([
 		runToolCheck('tsqx', tsqxPath, ['--help']),
 		runToolCheck('asy', asyPath, ['--version']),
+		runToolCheck('pdftocairo', pdfConverterPath, ['-v']),
 	]));
 	logToolCheck(tsqxCheck);
 	logToolCheck(asyCheck);
+	logToolCheck(converterCheck);
 
 	if (!tsqxCheck.ok || !asyCheck.ok) {
 		outputChannel.show(true);
@@ -480,7 +518,10 @@ async function runSetupWizard(context: vscode.ExtensionContext): Promise<void> {
 	}
 	await config.update('autoCompileOnSave', autoCompileChoice.value, target);
 	await context.globalState.update('setupCompleted', true);
-	vscode.window.showInformationMessage('TSQX setup completed. The toolchain check passed.');
+	const setupMessage = converterCheck.ok
+		? 'TSQX setup completed. Compilation, live preview, and export checks passed.'
+		: 'TSQX setup completed. Compilation works; install or configure pdftocairo for live preview and export.';
+	vscode.window.showInformationMessage(setupMessage);
 }
 
 async function maybeOfferSetup(
@@ -511,6 +552,7 @@ async function diagnoseToolchain(): Promise<void> {
 	const config = getConfig();
 	const tsqxPath = config.get<string>('tsqxPath', 'tsqx');
 	const asyPath = config.get<string>('asyPath', 'asy');
+	const pdfConverterPath = config.get<string>('pdfConverterPath', 'pdftocairo');
 	const extraArgs = normalizeExtraArgs(config.get<unknown>('extraTsqxArgs', ['-p']));
 	const timeout = config.get<number>('compilationTimeout', 30);
 	const autoCompileOnSave = config.get<boolean>('autoCompileOnSave', true);
@@ -525,6 +567,7 @@ async function diagnoseToolchain(): Promise<void> {
 	outputChannel.appendLine('Configuration');
 	outputChannel.appendLine(`- tsqxPath: ${tsqxPath}`);
 	outputChannel.appendLine(`- asyPath: ${asyPath}`);
+	outputChannel.appendLine(`- pdfConverterPath: ${pdfConverterPath}`);
 	outputChannel.appendLine(`- extraTsqxArgs: ${JSON.stringify(extraArgs)}`);
 	outputChannel.appendLine(`- compilationTimeout: ${timeout}s`);
 	outputChannel.appendLine(`- autoCompileOnSave: ${autoCompileOnSave}`);
@@ -535,13 +578,15 @@ async function diagnoseToolchain(): Promise<void> {
 
 	const tsqxCheck = await runToolCheck('tsqx', tsqxPath, ['--help']);
 	const asyCheck = await runToolCheck('asy', asyPath, ['--version']);
+	const converterCheck = await runToolCheck('pdftocairo', pdfConverterPath, ['-v']);
 
 	logToolCheck(tsqxCheck);
 	logToolCheck(asyCheck);
+	logToolCheck(converterCheck);
 
 	outputChannel.show(true);
 
-	const failedChecks = [tsqxCheck, asyCheck].filter(check => !check.ok);
+	const failedChecks = [tsqxCheck, asyCheck, converterCheck].filter(check => !check.ok);
 	if (failedChecks.length === 0) {
 		vscode.window.showInformationMessage('TSQX toolchain diagnosis passed. See "TSQX Compiler" output for details.');
 	} else {
@@ -627,25 +672,118 @@ function openPdfPreview(pdfPath: string) {
 	);
 }
 
-/** If the PDF is already open in a tab, close and reopen it to force refresh */
-function refreshOpenPdf(pdfPath: string) {
-	const pdfUri = vscode.Uri.file(pdfPath);
-	for (const tabGroup of vscode.window.tabGroups.all) {
-		for (const tab of tabGroup.tabs) {
-			if (tab.input instanceof vscode.TabInputCustom || tab.input instanceof vscode.TabInputText) {
-				if (tab.input.uri.fsPath === pdfUri.fsPath) {
-					vscode.window.tabGroups.close(tab).then(() => {
-						vscode.commands.executeCommand(
-							'vscode.open', pdfUri,
-							{ viewColumn: vscode.ViewColumn.Beside, preview: true }
-						);
-					});
-					return;
-				}
+async function showLivePreview(sourcePath: string, pdfPath: string, reveal: boolean): Promise<void> {
+	const svgPath = getPreviewSvgPath(sourcePath);
+	try {
+		await convertPdf(pdfPath, svgPath, 'svg', getConversionOptions(sourcePath));
+		if (reveal) {
+			previewManager.show(sourcePath, svgPath);
+		} else {
+			previewManager.refresh(sourcePath, svgPath);
+		}
+	} catch (error) {
+		const message = `Live preview conversion failed: ${formatError(error)}`;
+		outputChannel.appendLine(`✗ ${message}`);
+		if (previewManager.isOpen(sourcePath)) {
+			previewManager.showError(sourcePath, message);
+		}
+		if (reveal) {
+			const choice = await vscode.window.showWarningMessage(
+				`${message}. Opening the generated PDF instead.`,
+				'Show Output'
+			);
+			if (choice === 'Show Output') {
+				outputChannel.show(true);
 			}
+			openPdfPreview(pdfPath);
 		}
 	}
-	// PDF is not currently open — do nothing (compile-only, no auto-open)
+}
+
+async function refreshOpenPreview(sourcePath: string, pdfPath: string): Promise<void> {
+	if (previewManager.isOpen(sourcePath)) {
+		await showLivePreview(sourcePath, pdfPath, false);
+	}
+}
+
+async function exportFigure(format: ExportFormat, uri?: vscode.Uri): Promise<void> {
+	const sourcePath = resolveFilePath(uri);
+	if (!sourcePath) {
+		return;
+	}
+	let pdfPath = getPdfPath(sourcePath);
+	if (await isOutputStale(sourcePath, pdfPath)) {
+		const result = await compileFile(sourcePath);
+		if (!result?.success) {
+			return;
+		}
+		pdfPath = result.pdfPath;
+	}
+	const defaultPath = path.join(
+		path.dirname(pdfPath),
+		`${path.basename(sourcePath, path.extname(sourcePath))}.${format}`
+	);
+	const destination = await vscode.window.showSaveDialog({
+		defaultUri: vscode.Uri.file(defaultPath),
+		filters: format === 'svg'
+			? { 'SVG image': ['svg'] }
+			: { 'PNG image': ['png'] },
+		title: `Export TSQX figure as ${format.toUpperCase()}`,
+	});
+	if (!destination) {
+		return;
+	}
+	const destinationPath = destination.fsPath.toLowerCase().endsWith(`.${format}`)
+		? destination.fsPath
+		: `${destination.fsPath}.${format}`;
+	const destinationUri = vscode.Uri.file(destinationPath);
+
+	try {
+		await vscode.window.withProgress({
+			location: vscode.ProgressLocation.Notification,
+			title: `Exporting TSQX as ${format.toUpperCase()}`,
+		}, () => convertPdf(pdfPath, destinationPath, format, getConversionOptions(sourcePath)));
+		const choice = await vscode.window.showInformationMessage(
+			`Exported ${destinationPath}`,
+			'Reveal File'
+		);
+		if (choice === 'Reveal File') {
+			await vscode.commands.executeCommand('revealFileInOS', destinationUri);
+		}
+	} catch (error) {
+		outputChannel.appendLine(`✗ ${format.toUpperCase()} export failed: ${formatError(error)}`);
+		const choice = await vscode.window.showErrorMessage(
+			`${format.toUpperCase()} export failed: ${formatError(error)}`,
+			'Show Output'
+		);
+		if (choice === 'Show Output') {
+			outputChannel.show(true);
+		}
+	}
+}
+
+function getConversionOptions(sourcePath: string) {
+	const config = getConfig(vscode.Uri.file(sourcePath));
+	return {
+		command: config.get<string>('pdfConverterPath', 'pdftocairo'),
+		timeoutMs: config.get<number>('compilationTimeout', 30) * 1000,
+		pngDpi: config.get<number>('pngDpi', 144),
+	};
+}
+
+function getPreviewSvgPath(sourcePath: string): string {
+	const hash = crypto.createHash('sha256').update(sourcePath).digest('hex').slice(0, 20);
+	return path.join(extensionContext.globalStorageUri.fsPath, 'previews', `${hash}.svg`);
+}
+
+function formatError(error: unknown): string {
+	if (error && typeof error === 'object') {
+		const details = (error as { stderr?: string }).stderr?.trim();
+		if (details) {
+			return details.split(/\r?\n/).slice(0, 3).join('; ');
+		}
+	}
+	return error instanceof Error ? error.message : String(error);
 }
 
 function updateStatusBar(state?: 'compiling' | 'success' | 'error'): void {

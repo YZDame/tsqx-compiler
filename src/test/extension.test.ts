@@ -1,6 +1,10 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { createDiagnosticEntries } from '../diagnostics';
+import { PreviewManager } from '../previewManager';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 
 suite('Extension Test Suite', () => {
 	test('registers TSQX commands on activation', async () => {
@@ -12,6 +16,9 @@ suite('Extension Test Suite', () => {
 		const commands = await vscode.commands.getCommands(true);
 		assert.ok(commands.includes('tsqx.compile'));
 		assert.ok(commands.includes('tsqx.preview'));
+		assert.ok(commands.includes('tsqx.openPdf'));
+		assert.ok(commands.includes('tsqx.exportSvg'));
+		assert.ok(commands.includes('tsqx.exportPng'));
 		assert.ok(commands.includes('tsqx.openGeneratedAsy'));
 		assert.ok(commands.includes('tsqx.diagnoseToolchain'));
 		assert.ok(commands.includes('tsqx.showOutput'));
@@ -31,6 +38,8 @@ suite('Extension Test Suite', () => {
 		assert.strictEqual(config.get('compilationTimeout'), 30);
 		assert.deepStrictEqual(config.get('extraTsqxArgs'), ['-p']);
 		assert.strictEqual(config.get('outputDirectory'), '');
+		assert.strictEqual(config.get('pdfConverterPath'), 'pdftocairo');
+		assert.strictEqual(config.get('pngDpi'), 144);
 	});
 
 	test('routes generated Asymptote diagnostics to the ASY file', () => {
@@ -91,5 +100,23 @@ suite('Extension Test Suite', () => {
 			new vscode.Position(2, 0)
 		);
 		assert.strictEqual(definitions[0]?.range.start.line, 0);
+	});
+
+	test('keeps one persistent preview panel per TSQX source', async () => {
+		const directory = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'tsqx-preview-test-'));
+		const svgPath = path.join(directory, 'figure.svg');
+		await fs.promises.writeFile(svgPath, '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"/>');
+		const manager = new PreviewManager();
+		try {
+			manager.show('/tmp/figure.tsqx', svgPath);
+			assert.strictEqual(manager.isOpen('/tmp/figure.tsqx'), true);
+			manager.refresh('/tmp/figure.tsqx', svgPath);
+			manager.showError('/tmp/figure.tsqx', 'test error');
+			manager.close('/tmp/figure.tsqx');
+			assert.strictEqual(manager.isOpen('/tmp/figure.tsqx'), false);
+		} finally {
+			manager.dispose();
+			await fs.promises.rm(directory, { recursive: true, force: true });
+		}
 	});
 });

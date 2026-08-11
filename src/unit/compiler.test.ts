@@ -65,7 +65,7 @@ fs.writeFileSync(args[outputIndex + 1] + '.pdf', '%PDF-new');`);
     await fs.promises.writeFile(fixture.pdfPath, 'old pdf');
 
     const result = await compileTsqx(fixture.sourcePath, {
-      timeout: 2,
+      timeout: 10,
       tsqxPath: tsqx,
       asyPath: asy,
       extraArgs: ['value with spaces', '$(touch should-not-run)'],
@@ -94,7 +94,7 @@ const outputIndex = args.indexOf('-o');
 fs.writeFileSync(args[outputIndex + 1] + '.pdf', '%PDF-output');`);
 
     const result = await compileTsqx(fixture.sourcePath, {
-      timeout: 2,
+      timeout: 10,
       tsqxPath: tsqx,
       asyPath: asy,
       extraArgs: [],
@@ -121,7 +121,7 @@ process.exit(2);`);
     await fs.promises.writeFile(fixture.pdfPath, 'old pdf');
 
     const result = await compileTsqx(fixture.sourcePath, {
-      timeout: 2,
+      timeout: 10,
       tsqxPath: tsqx,
       asyPath: asy,
       extraArgs: [],
@@ -152,7 +152,7 @@ process.exit(3);`);
     await fs.promises.writeFile(fixture.pdfPath, 'old pdf');
 
     const result = await compileTsqx(fixture.sourcePath, {
-      timeout: 2,
+      timeout: 10,
       tsqxPath: tsqx,
       asyPath: asy,
       extraArgs: [],

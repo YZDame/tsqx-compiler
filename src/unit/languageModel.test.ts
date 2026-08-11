@@ -40,5 +40,6 @@ test('finds the nearest preceding redefinition', () => {
 test('all figure templates expose point definitions', () => {
   for (const template of FIGURE_TEMPLATES) {
     assert.ok(parseDefinitions(template.content).length > 0, template.label);
+    assert.match(template.filename, /^[a-z0-9-]+\.tsqx$/);
   }
 });

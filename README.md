@@ -56,7 +56,7 @@ Compile [TSQX](https://github.com/vEnhance/tsqx) geometry files to high-quality 
 | TSQX: Run First-Use Setup | — | Check tools and configure output and auto-compile behavior |
 | TSQX: Compile All Files in Workspace | — | Compile every `.tsqx` file in the workspace |
 | TSQX: Clean Generated Artifacts | — | Delete the current file's generated ASY and PDF after confirmation |
-| TSQX: New Figure from Template | — | Open an untitled TSQX editor using a verified construction template |
+| TSQX: New Figure from Template | — | Choose a verified construction template and create a named `.tsqx` file |
 | TSQX: Toggle Auto Compile on Save | — | Enable / disable auto-compile |
 | TSQX: Set Current File as TSQX | — | Mark a `.txt` file as TSQX |
 
@@ -128,7 +128,7 @@ Release workflow details are documented in [docs/RELEASE.md](./docs/RELEASE.md).
 The extension adds a **TSQX** panel to the Activity Bar (left sidebar) with quick-access buttons:
 
 - **Compile Current File** — run the tsqx → asy → pdf pipeline
-- **New Figure from Template** — open a common TSQX construction in an untitled editor
+- **New Figure from Template** — choose a save location and create a common TSQX construction
 - **Compile Workspace** — compile all TSQX sources sequentially with progress and cancellation
 - **Live Preview** — open or refresh the persistent SVG preview panel
 - **Open Generated PDF** — inspect the formal PDF in VS Code's viewer

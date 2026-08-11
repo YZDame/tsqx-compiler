@@ -1,6 +1,7 @@
 export interface FigureTemplate {
   label: string;
   description: string;
+  filename: string;
   content: string;
 }
 
@@ -8,6 +9,7 @@ export const FIGURE_TEMPLATES: readonly FigureTemplate[] = [
   {
     label: 'Basic triangle',
     description: 'Three points and a filled triangle',
+    filename: 'basic-triangle.tsqx',
     content: `# Basic triangle
 ~triangle A B C
 
@@ -17,6 +19,7 @@ A--B--C--cycle / 0.10 lightcyan / blue
   {
     label: 'Triangle with incenter',
     description: 'Incenter, incircle, and three radii',
+    filename: 'triangle-incenter.tsqx',
     content: `# Triangle with incenter and incircle
 A = dir 110
 B = dir 210
@@ -33,6 +36,7 @@ C--I / red
   {
     label: 'Orthocenter and feet',
     description: 'Altitude feet and orthic triangle',
+    filename: 'orthocenter-feet.tsqx',
     content: `# Orthocenter and orthic triangle
 A = dir 95
 B = dir 215
@@ -52,6 +56,7 @@ C--F / gray
   {
     label: 'Circle construction',
     description: 'Points on the unit circle and a center-point circle',
+    filename: 'circle-construction.tsqx',
     content: `# Circle construction
 O = (0, 0)
 A = dir 20

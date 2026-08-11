@@ -22,6 +22,7 @@ All notable changes to the TSQX Compiler extension will be documented in this fi
 - Persistent SVG live preview that preserves its panel, zoom, and scroll state across refreshes
 - Explicit PDF opening plus SVG and configurable-DPI PNG export commands
 - `pdftocairo` diagnosis and safe PDF-conversion fallback behavior
+- Resolved executable paths in setup details and `.tsqx`-named files created from templates
 
 ### Fixed
 - Make status-bar error clicks open compiler output and keep auto-compile toggles scoped to the workspace

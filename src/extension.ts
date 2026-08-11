@@ -521,7 +521,10 @@ async function runSetupWizard(context: vscode.ExtensionContext): Promise<void> {
 	const setupMessage = converterCheck.ok
 		? 'TSQX setup completed. Compilation, live preview, and export checks passed.'
 		: 'TSQX setup completed. Compilation works; install or configure pdftocairo for live preview and export.';
-	vscode.window.showInformationMessage(setupMessage);
+	const setupChoice = await vscode.window.showInformationMessage(setupMessage, 'Show Details');
+	if (setupChoice === 'Show Details') {
+		outputChannel.show(true);
+	}
 }
 
 async function maybeOfferSetup(
@@ -603,9 +606,11 @@ interface ToolCheckResult {
 	args: string[];
 	summary: string;
 	details: string[];
+	resolvedPath?: string;
 }
 
 async function runToolCheck(label: string, command: string, args: string[]): Promise<ToolCheckResult> {
+	const resolvedPath = await resolveExecutablePath(command);
 	try {
 		const { stdout, stderr } = await execFileAsync(command, args, { timeout: 10_000 });
 		const mergedOutput = [stdout, stderr].filter(Boolean).join('\n');
@@ -617,6 +622,7 @@ async function runToolCheck(label: string, command: string, args: string[]): Pro
 			args,
 			summary,
 			details: formatOutputDetails(mergedOutput),
+			resolvedPath,
 		};
 	} catch (error: any) {
 		const mergedOutput = [error.stdout, error.stderr, error.message].filter(Boolean).join('\n');
@@ -627,6 +633,7 @@ async function runToolCheck(label: string, command: string, args: string[]): Pro
 			args,
 			summary: firstUsefulLine(mergedOutput) || 'Command failed.',
 			details: formatOutputDetails(mergedOutput),
+			resolvedPath,
 		};
 	}
 }
@@ -634,6 +641,7 @@ async function runToolCheck(label: string, command: string, args: string[]): Pro
 function logToolCheck(result: ToolCheckResult): void {
 	outputChannel.appendLine(`${result.ok ? '[OK]' : '[FAIL]'} ${result.label}`);
 	outputChannel.appendLine(`- command: ${result.command} ${result.args.join(' ')}`.trim());
+	outputChannel.appendLine(`- resolved path: ${result.resolvedPath || '(not found on PATH)'}`);
 	outputChannel.appendLine(`- summary: ${result.summary}`);
 	if (result.details.length > 0) {
 		outputChannel.appendLine('- details:');
@@ -642,6 +650,25 @@ function logToolCheck(result: ToolCheckResult): void {
 		}
 	}
 	outputChannel.appendLine('');
+}
+
+async function resolveExecutablePath(command: string): Promise<string | undefined> {
+	if (path.isAbsolute(command) || command.includes('/') || command.includes('\\')) {
+		const resolved = path.resolve(command);
+		try {
+			await fs.promises.access(resolved, process.platform === 'win32' ? fs.constants.F_OK : fs.constants.X_OK);
+			return resolved;
+		} catch {
+			return undefined;
+		}
+	}
+	try {
+		const locator = process.platform === 'win32' ? 'where.exe' : 'which';
+		const { stdout } = await execFileAsync(locator, [command], { timeout: 5000 });
+		return stdout.split(/\r?\n/).map(line => line.trim()).find(Boolean);
+	} catch {
+		return undefined;
+	}
 }
 
 function firstUsefulLine(output: string): string | undefined {

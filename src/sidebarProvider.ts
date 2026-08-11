@@ -30,6 +30,7 @@ export class TsqxSidebarProvider implements vscode.TreeDataProvider<CommandTreeI
 		const autoCompile = config.get<boolean>('autoCompileOnSave', true);
 
 		return [
+			{ label: 'New Figure from Template', command: 'tsqx.newFigure', icon: 'new-file' },
 			{ label: 'Compile Current File', command: 'tsqx.compile', icon: 'play' },
 			{ label: 'Compile Workspace', command: 'tsqx.compileWorkspace', icon: 'run-all' },
 			{ label: 'Preview PDF', command: 'tsqx.preview', icon: 'open-preview' },

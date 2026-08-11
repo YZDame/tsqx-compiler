@@ -41,12 +41,12 @@
             "name": "keyword.control.special.tsqx"
         },
         "point-definition": {
-            "match": "^([A-Z][A-Za-z_']*)\\s+(\\d+(?:\\s+[A-Z]+)?\\s+)?=\\s+(.*)",
+            "match": "^\\s*([A-Za-z][A-Za-z0-9_']*)\\s*(?:(?:[\\d.]+R[\\d.]+|(?:\\d+)?(?:N|S|E|W)+)\\s*)?(?:(?:dl|d|l|:|\\.|;)\\s*)?=\\s*(.*)",
             "captures": {
                 "1": {
                     "name": "variable.other.point.tsqx"
                 },
-                "3": {
+                "2": {
                     "patterns": [
                         {
                             "include": "#builtins"
@@ -62,7 +62,7 @@
             }
         },
         "draw-command": {
-            "match": "^([A-Z][A-Za-z_']*(?:\\s*--\\s*[A-Z][A-Za-z_']*)*(?:\\s*--\\s*cycle)?|incircle|circumcircle|unitcircle|CP|CR|Line)(.*)$",
+            "match": "^([A-Z][A-Za-z0-9_']*(?:\\s*--\\s*[A-Z][A-Za-z0-9_']*)*(?:\\s*--\\s*cycle)?|incircle|circumcircle|unitcircle|CP|CR|Line)(.*)$",
             "captures": {
                 "1": {
                     "name": "entity.name.function.draw.tsqx"
@@ -99,7 +99,7 @@
             "name": "support.function.builtin.tsqx"
         },
         "point-reference": {
-            "match": "\\b([A-Z][A-Za-z_']*)\\b",
+            "match": "\\b([A-Z][A-Za-z0-9_']*)\\b",
             "name": "variable.other.point.tsqx"
         },
         "numbers": {

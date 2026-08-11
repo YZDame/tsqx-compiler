@@ -14,6 +14,8 @@ import { createDiagnosticEntries } from './diagnostics';
 import { CompileCoordinator } from './compileCoordinator';
 import { resolveOutputDirectory } from './outputDirectory';
 import { TsqxSidebarProvider } from './sidebarProvider';
+import { registerLanguageFeatures } from './languageFeatures';
+import { openFigureTemplate } from './templates';
 
 const execFileAsync = promisify(execFile);
 
@@ -58,6 +60,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.window.registerTreeDataProvider('tsqx-commands', sidebarProvider)
 	);
+	registerLanguageFeatures(context);
 
 	// --- Commands ---
 
@@ -112,6 +115,12 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tsqx.diagnoseToolchain', async () => {
 			await diagnoseToolchain();
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tsqx.newFigure', async () => {
+			await openFigureTemplate();
 		})
 	);
 

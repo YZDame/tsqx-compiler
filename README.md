@@ -22,6 +22,8 @@ Compile [TSQX](https://github.com/vEnhance/tsqx) geometry files to high-quality 
 - **First-Use Setup** — Check the toolchain and choose output and auto-compile behavior from a guided setup.
 - **Project Output Directory** — Keep generated files beside sources or under a workspace build folder without filename collisions.
 - **Workspace Compilation** — Compile every `.tsqx` file with progress, cancellation, and a result summary.
+- **Templates and Snippets** — Start common triangle, center, foot, circle, and drawing constructions quickly.
+- **Language Assistance** — Built-in and point completion, hover documentation, document outline, and go-to-definition.
 
 ## Quick Start
 
@@ -49,6 +51,7 @@ Compile [TSQX](https://github.com/vEnhance/tsqx) geometry files to high-quality 
 | TSQX: Run First-Use Setup | — | Check tools and configure output and auto-compile behavior |
 | TSQX: Compile All Files in Workspace | — | Compile every `.tsqx` file in the workspace |
 | TSQX: Clean Generated Artifacts | — | Delete the current file's generated ASY and PDF after confirmation |
+| TSQX: New Figure from Template | — | Open an untitled TSQX editor using a verified construction template |
 | TSQX: Toggle Auto Compile on Save | — | Enable / disable auto-compile |
 | TSQX: Set Current File as TSQX | — | Mark a `.txt` file as TSQX |
 
@@ -73,6 +76,10 @@ Relative output directories are resolved from the workspace root. The source fol
 ## First-Use Setup
 
 When the first TSQX editor opens, the extension offers to run setup. It checks the configured `tsqx` and `asy` commands, then lets you choose whether outputs stay beside source files or under `.tsqx-build`, and whether save-time compilation is enabled. Run **TSQX: Run First-Use Setup** at any time to repeat it.
+
+## Language Assistance
+
+Completion includes documented TSQX geometry functions, points already defined in the current document, colors, and pen styles. Hover shows function signatures or the nearest preceding point definition. The Outline view lists point definitions, and **Go to Definition** follows point references in the current file. Static snippets are available with prefixes such as `tsqx-triangle`, `tsqx-point`, `tsqx-foot`, `tsqx-fill`, and `tsqx-asy`.
 
 ## Development
 
@@ -108,6 +115,7 @@ Release workflow details are documented in [docs/RELEASE.md](./docs/RELEASE.md).
 The extension adds a **TSQX** panel to the Activity Bar (left sidebar) with quick-access buttons:
 
 - **Compile Current File** — run the tsqx → asy → pdf pipeline
+- **New Figure from Template** — open a common TSQX construction in an untitled editor
 - **Compile Workspace** — compile all TSQX sources sequentially with progress and cancellation
 - **Preview PDF** — open the PDF in a side panel
 - **Clean Generated Artifacts** — remove the selected source's generated ASY and PDF after confirmation

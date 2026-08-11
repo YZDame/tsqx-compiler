@@ -1,0 +1,31 @@
+{
+  "Basic triangle": {
+    "prefix": "tsqx-triangle",
+    "body": [
+      "~triangle ${1:A} ${2:B} ${3:C}",
+      "",
+      "${1:A}--${2:B}--${3:C}--cycle / ${4:0.10 lightcyan} / ${5:blue}"
+    ],
+    "description": "Create and draw a basic TSQX triangle"
+  },
+  "Point definition": {
+    "prefix": "tsqx-point",
+    "body": "${1:P} ${2:45} = ${3:dir 90}",
+    "description": "Define a labeled TSQX point"
+  },
+  "Perpendicular foot": {
+    "prefix": "tsqx-foot",
+    "body": "${1:D} = foot ${2:P} ${3:A} ${4:B}",
+    "description": "Define the perpendicular foot from P to AB"
+  },
+  "Filled polygon": {
+    "prefix": "tsqx-fill",
+    "body": "${1:A}--${2:B}--${3:C}--cycle / ${4:0.12 lightcyan} / ${5:blue}",
+    "description": "Draw a filled polygon with an outline"
+  },
+  "Direct Asymptote": {
+    "prefix": "tsqx-asy",
+    "body": "!${1:draw((0,0)--(1,0));}",
+    "description": "Insert a direct Asymptote command"
+  }
+}

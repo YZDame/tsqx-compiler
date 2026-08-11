@@ -18,6 +18,7 @@ suite('Extension Test Suite', () => {
 		assert.ok(commands.includes('tsqx.setup'));
 		assert.ok(commands.includes('tsqx.compileWorkspace'));
 		assert.ok(commands.includes('tsqx.cleanArtifacts'));
+		assert.ok(commands.includes('tsqx.newFigure'));
 		assert.ok(commands.includes('tsqx.toggleAutoCompile'));
 		assert.ok(commands.includes('tsqx.setLanguage'));
 	});
@@ -56,5 +57,39 @@ suite('Extension Test Suite', () => {
 		assert.strictEqual(diagnostics?.[0].range.start.line, 3);
 		assert.strictEqual(diagnostics?.[0].range.start.character, 1);
 		assert.strictEqual(diagnostics?.[0].source, 'TSQX Compiler (asy)');
+	});
+
+	test('provides completion, hover, symbols, and definition navigation', async () => {
+		const document = await vscode.workspace.openTextDocument({
+			language: 'tsqx',
+			content: 'A = dir 110\nP = foot A B C\nA--P / blue\n',
+		});
+		const completions = await vscode.commands.executeCommand<vscode.CompletionList>(
+			'vscode.executeCompletionItemProvider',
+			document.uri,
+			new vscode.Position(1, 4)
+		);
+		assert.ok(completions.items.some(item => item.label === 'foot'));
+		assert.ok(completions.items.some(item => item.label === 'A'));
+
+		const hovers = await vscode.commands.executeCommand<vscode.Hover[]>(
+			'vscode.executeHoverProvider',
+			document.uri,
+			new vscode.Position(1, 5)
+		);
+		assert.ok(hovers.length > 0);
+
+		const symbols = await vscode.commands.executeCommand<vscode.DocumentSymbol[]>(
+			'vscode.executeDocumentSymbolProvider',
+			document.uri
+		);
+		assert.deepStrictEqual(symbols.map(symbol => symbol.name), ['A', 'P']);
+
+		const definitions = await vscode.commands.executeCommand<vscode.Location[]>(
+			'vscode.executeDefinitionProvider',
+			document.uri,
+			new vscode.Position(2, 0)
+		);
+		assert.strictEqual(definitions[0]?.range.start.line, 0);
 	});
 });

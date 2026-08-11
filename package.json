@@ -68,7 +68,19 @@
         "path": "./syntaxes/tsqx.tmLanguage.json"
       }
     ],
+    "snippets": [
+      {
+        "language": "tsqx",
+        "path": "./snippets/tsqx.json"
+      }
+    ],
     "commands": [
+      {
+        "command": "tsqx.newFigure",
+        "title": "New Figure from Template",
+        "icon": "$(new-file)",
+        "category": "TSQX"
+      },
       {
         "command": "tsqx.preview",
         "title": "Preview TSQX Figure",
@@ -304,6 +316,8 @@
     "test:unit": "node --test \"out/unit/*.test.js\"",
     "test:extension": "vscode-test",
     "smoke:compile": "node ./scripts/smoke-compile.mjs",
+    "presmoke:templates": "npm run compile",
+    "smoke:templates": "node ./scripts/smoke-templates.mjs",
     "package:vsix": "vsce package",
     "package": "npm run package:vsix"
   },

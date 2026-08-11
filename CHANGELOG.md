@@ -4,6 +4,8 @@ All notable changes to the TSQX Compiler extension will be documented in this fi
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-08-11
+
 ### Fixed
 - Normalize expanded output paths and use portable absolute fixtures on Windows
 

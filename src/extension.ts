@@ -6,10 +6,10 @@ import { promisify } from 'util';
 import {
 	CompilationResult,
 	compileTsqx,
-	createDiagnosticEntries,
 	isOutputStale,
 	normalizeExtraArgs,
 } from './compiler';
+import { createDiagnosticEntries } from './diagnostics';
 import { CompileCoordinator } from './compileCoordinator';
 import { TsqxSidebarProvider } from './sidebarProvider';
 

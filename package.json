@@ -262,7 +262,9 @@
     "check": "npm run compile && npm run lint && npm test",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
-    "test": "vscode-test",
+    "test": "npm run test:unit && npm run test:extension",
+    "test:unit": "node --test \"out/unit/*.test.js\"",
+    "test:extension": "vscode-test",
     "smoke:compile": "node ./scripts/smoke-compile.mjs",
     "package:vsix": "vsce package",
     "package": "npm run package:vsix"

@@ -12,6 +12,11 @@ All notable changes to the TSQX Compiler extension will be documented in this fi
 
 ### Fixed
 - Make status-bar error clicks open compiler output and keep auto-compile toggles scoped to the workspace
+- Repair release workflow validation and support manual recovery for an existing tag
+
+### Testing
+- Add cross-platform unit jobs and direct coverage for argument parsing, stale outputs, compiler failures, timeouts, atomic output preservation, and per-file scheduling
+- Exclude test and development sources from release VSIX packages
 
 ## [0.2.0] - 2026-03-22
 

@@ -4,16 +4,32 @@ on:
   push:
     tags:
       - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag to publish (for example, v0.2.0)
+        required: true
+        type: string
+      publishMarketplace:
+        description: Also publish to the VS Code Marketplace
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -23,7 +39,7 @@ jobs:
 
       - name: Verify tag matches package version
         run: |
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          TAG_VERSION="${RELEASE_TAG#v}"
           PACKAGE_VERSION="$(node -p "require('./package.json').version")"
           if [ "$TAG_VERSION" != "$PACKAGE_VERSION" ]; then
             echo "Tag version $TAG_VERSION does not match package.json version $PACKAGE_VERSION"
@@ -37,16 +53,16 @@ jobs:
         run: xvfb-run -a npm run check
 
       - name: Build VSIX
-        run: npx vsce package -o "tsqx-compiler-${GITHUB_REF_NAME}.vsix"
+        run: npx vsce package -o "tsqx-compiler-${RELEASE_TAG}.vsix"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: tsqx-compiler-${{ github.ref_name }}.vsix
+          tag_name: ${{ env.RELEASE_TAG }}
+          files: tsqx-compiler-${{ env.RELEASE_TAG }}.vsix
           generate_release_notes: true
+          fail_on_unmatched_files: true
 
       - name: Publish to VS Code Marketplace
-        if: ${{ secrets.VSCE_PAT != '' }}
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
-        run: npx vsce publish --packagePath "tsqx-compiler-${GITHUB_REF_NAME}.vsix"
+        if: ${{ env.VSCE_PAT != '' && (github.event_name == 'push' || inputs.publishMarketplace == true) }}
+        run: npx vsce publish --packagePath "tsqx-compiler-${RELEASE_TAG}.vsix"

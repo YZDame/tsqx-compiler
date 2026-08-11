@@ -53,6 +53,8 @@ Use `minor` or `major` when appropriate.
 git push origin main --follow-tags
 ```
 
+If a tag push did not create a GitHub Release, run the **Release** workflow manually and supply the existing tag. Leave **Also publish to the VS Code Marketplace** off when that version is already present there.
+
 ## What the Release Workflow Does
 
 Pushing a tag like `v0.1.1` triggers `.github/workflows/release.yml`, which:
@@ -62,6 +64,8 @@ Pushing a tag like `v0.1.1` triggers `.github/workflows/release.yml`, which:
 - builds a `.vsix`
 - creates a GitHub Release and uploads the `.vsix`
 - publishes to the VS Code Marketplace when `VSCE_PAT` is configured
+
+The workflow can also be started manually for an existing tag. Manual recovery does not publish to the Marketplace unless explicitly requested.
 
 ## Required Secrets
 

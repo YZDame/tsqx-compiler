@@ -94,6 +94,12 @@
         "category": "TSQX"
       },
       {
+        "command": "tsqx.showOutput",
+        "title": "Show Compiler Output",
+        "icon": "$(output)",
+        "category": "TSQX"
+      },
+      {
         "command": "tsqx.toggleAutoCompile",
         "title": "Toggle Auto Compile on Save",
         "category": "TSQX"
@@ -234,9 +240,17 @@
           "description": "Path to the Asymptote (asy) executable"
         },
         "tsqx.extraTsqxArgs": {
-          "type": "string",
-          "default": "-p",
-          "description": "Extra arguments to pass to tsqx CLI (e.g. -p for preamble, -s 200 for size)"
+          "type": [
+            "array",
+            "string"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "-p"
+          ],
+          "markdownDescription": "Extra arguments passed directly to the tsqx CLI. Prefer an array such as `[\"-p\", \"-s\", \"200\"]`. String values remain supported for compatibility."
         }
       }
     }

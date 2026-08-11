@@ -42,6 +42,7 @@ Compile [TSQX](https://github.com/vEnhance/tsqx) geometry files to high-quality 
 | TSQX: Compile TSQX File | `Cmd+Shift+B` / `Ctrl+Shift+B` | Compile to ASY and PDF |
 | TSQX: Open Generated ASY | — | Open the generated `.asy` file beside the editor |
 | TSQX: Diagnose Toolchain | — | Check `tsqx` / `asy` commands, versions, and current extension settings |
+| TSQX: Show Compiler Output | — | Open detailed compiler logs |
 | TSQX: Toggle Auto Compile on Save | — | Enable / disable auto-compile |
 | TSQX: Set Current File as TSQX | — | Mark a `.txt` file as TSQX |
 
@@ -54,9 +55,11 @@ Compile [TSQX](https://github.com/vEnhance/tsqx) geometry files to high-quality 
   "tsqx.compilationTimeout": 30,    // max seconds per compilation
   "tsqx.tsqxPath": "tsqx",          // path to tsqx executable
   "tsqx.asyPath": "asy",            // path to Asymptote executable
-  "tsqx.extraTsqxArgs": "-p"        // extra CLI args (e.g. "-p" for preamble, "-s 200" for size)
+  "tsqx.extraTsqxArgs": ["-p"]      // extra CLI args; each argument is a separate array item
 }
 ```
+
+For example, use `["-p", "-s", "200"]` to pass a size. Legacy string values remain supported. Commands are executed directly without a shell.
 
 ## Development
 

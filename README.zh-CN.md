@@ -42,6 +42,7 @@
 | TSQX: 编译 TSQX 文件 | `Cmd+Shift+B` / `Ctrl+Shift+B` | 编译为 ASY 和 PDF |
 | TSQX: 打开生成的 ASY | — | 在编辑器旁边打开生成的 `.asy` 文件 |
 | TSQX: 诊断工具链 | — | 检查 `tsqx` / `asy` 命令、版本和当前扩展设置 |
+| TSQX: 显示编译器输出 | — | 打开详细编译日志 |
 | TSQX: 切换保存时自动编译 | — | 启用/禁用自动编译 |
 | TSQX: 设置当前文件为 TSQX | — | 将 `.txt` 文件标记为 TSQX |
 
@@ -54,9 +55,11 @@
   "tsqx.compilationTimeout": 30,    // 每次编译的最大秒数
   "tsqx.tsqxPath": "tsqx",          // tsqx 可执行文件路径
   "tsqx.asyPath": "asy",            // Asymptote 可执行文件路径
-  "tsqx.extraTsqxArgs": "-p"        // 额外的 CLI 参数（例如 "-p" 表示前导码，"-s 200" 表示大小）
+  "tsqx.extraTsqxArgs": ["-p"]      // 额外的 CLI 参数；每个参数单独占一个数组元素
 }
 ```
+
+例如，使用 `["-p", "-s", "200"]` 传入尺寸参数。旧版字符串配置仍然兼容。扩展会直接启动命令，不经过 shell。
 
 ## 开发
 

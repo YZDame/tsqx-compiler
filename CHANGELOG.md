@@ -2,6 +2,17 @@
 
 All notable changes to the TSQX Compiler extension will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+- Run `tsqx` and `asy` without a shell and accept argument arrays while retaining legacy string configuration support
+- Queue compilation per file so saves during an active compile trigger a final up-to-date rebuild
+- Replace generated outputs only after validating non-empty artifacts and recompile stale previews
+- Attach Asymptote diagnostics to the generated `.asy` file instead of misleading TSQX source locations
+
+### Fixed
+- Make status-bar error clicks open compiler output and keep auto-compile toggles scoped to the workspace
+
 ## [0.2.0] - 2026-03-22
 
 ### Added

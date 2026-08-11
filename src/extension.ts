@@ -3,7 +3,14 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
-import { compileTsqx, createDiagnostics } from './compiler';
+import {
+	CompilationResult,
+	compileTsqx,
+	createDiagnosticEntries,
+	isOutputStale,
+	normalizeExtraArgs,
+} from './compiler';
+import { CompileCoordinator } from './compileCoordinator';
 import { TsqxSidebarProvider } from './sidebarProvider';
 
 const execFileAsync = promisify(execFile);
@@ -11,8 +18,10 @@ const execFileAsync = promisify(execFile);
 let diagnosticCollection: vscode.DiagnosticCollection;
 let statusBarItem: vscode.StatusBarItem;
 let outputChannel: vscode.OutputChannel;
-let compileDebounceTimer: ReturnType<typeof setTimeout> | undefined;
-let isCompiling = false;
+const compileDebounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const compileCoordinator = new CompileCoordinator<CompilationResult | undefined>();
+const activeCompiles = new Set<string>();
+let statusResetTimer: ReturnType<typeof setTimeout> | undefined;
 let sidebarProvider: TsqxSidebarProvider;
 
 function isTsqxFile(doc: vscode.TextDocument): boolean {
@@ -38,7 +47,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Status bar
 	statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-	statusBarItem.command = 'tsqx.toggleAutoCompile';
 	context.subscriptions.push(statusBarItem);
 	updateStatusBar();
 	updateStatusBarVisibility(vscode.window.activeTextEditor);
@@ -52,6 +60,12 @@ export function activate(context: vscode.ExtensionContext) {
 	// --- Commands ---
 
 	// Compile: tsqx → asy → pdf (no preview)
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tsqx.showOutput', () => {
+			outputChannel.show(true);
+		})
+	);
+
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tsqx.compile', async (uri?: vscode.Uri) => {
 			const filePath = resolveFilePath(uri);
@@ -70,8 +84,8 @@ export function activate(context: vscode.ExtensionContext) {
 			const filePath = resolveFilePath(uri);
 			if (!filePath) { return; }
 			const pdfPath = getPdfPath(filePath);
-			if (!fs.existsSync(pdfPath)) {
-				// PDF doesn't exist yet — compile first
+			if (await isOutputStale(filePath, pdfPath)) {
+				// Missing or stale PDF — compile first
 				const result = await compileFile(filePath);
 				if (!result || !result.success) { return; }
 			}
@@ -84,7 +98,7 @@ export function activate(context: vscode.ExtensionContext) {
 			const filePath = resolveFilePath(uri);
 			if (!filePath) { return; }
 			const asyPath = getAsyPath(filePath);
-			if (!fs.existsSync(asyPath)) {
+			if (await isOutputStale(filePath, asyPath)) {
 				const result = await compileFile(filePath);
 				if (!result || !result.success) { return; }
 			}
@@ -104,7 +118,10 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand('tsqx.toggleAutoCompile', async () => {
 			const config = getConfig();
 			const current = config.get<boolean>('autoCompileOnSave', true);
-			await config.update('autoCompileOnSave', !current, vscode.ConfigurationTarget.Global);
+			const target = vscode.workspace.workspaceFolders
+				? vscode.ConfigurationTarget.Workspace
+				: vscode.ConfigurationTarget.Global;
+			await config.update('autoCompileOnSave', !current, target);
 			vscode.window.showInformationMessage(
 				`TSQX auto-compile on save: ${!current ? 'enabled' : 'disabled'}`
 			);
@@ -130,15 +147,19 @@ export function activate(context: vscode.ExtensionContext) {
 			if (!getConfig().get<boolean>('autoCompileOnSave', true)) { return; }
 			const autoCompileDelay = getAutoCompileDelay();
 
-			if (compileDebounceTimer) {
-				clearTimeout(compileDebounceTimer);
+			const filePath = doc.uri.fsPath;
+			const existingTimer = compileDebounceTimers.get(filePath);
+			if (existingTimer) {
+				clearTimeout(existingTimer);
 			}
-			compileDebounceTimer = setTimeout(async () => {
-				const result = await compileFile(doc.uri.fsPath);
+			const timer = setTimeout(async () => {
+				compileDebounceTimers.delete(filePath);
+				const result = await compileFile(filePath, true);
 				if (result && result.success) {
 					refreshOpenPdf(result.pdfPath);
 				}
 			}, autoCompileDelay);
+			compileDebounceTimers.set(filePath, timer);
 		})
 	);
 
@@ -196,12 +217,16 @@ function getAsyPath(tsqxFilePath: string): string {
 }
 
 /** Compile a TSQX file and return the result */
-async function compileFile(filePath: string) {
-	if (isCompiling) {
-		outputChannel.appendLine('Skipping compile: already in progress');
-		return undefined;
-	}
-	isCompiling = true;
+async function compileFile(filePath: string, rerunIfBusy = false) {
+	return compileCoordinator.run(
+		filePath,
+		() => performCompile(filePath),
+		rerunIfBusy
+	);
+}
+
+async function performCompile(filePath: string): Promise<CompilationResult | undefined> {
+	activeCompiles.add(filePath);
 	updateStatusBar('compiling');
 	outputChannel.appendLine(`Compiling: ${filePath}`);
 
@@ -209,17 +234,20 @@ async function compileFile(filePath: string) {
 	const timeout = config.get<number>('compilationTimeout', 30);
 	const tsqxPath = config.get<string>('tsqxPath', 'tsqx');
 	const asyPath = config.get<string>('asyPath', 'asy');
-	const extraArgs = config.get<string>('extraTsqxArgs', '-p');
+	const extraArgs = normalizeExtraArgs(config.get<unknown>('extraTsqxArgs', ['-p']));
+	let finalState: 'success' | 'error' = 'error';
 
 	try {
 		const result = await compileTsqx(filePath, { timeout, tsqxPath, asyPath, extraArgs });
 
-		const diagnostics = createDiagnostics(filePath, result);
-		diagnosticCollection.set(vscode.Uri.file(filePath), diagnostics);
+		const diagnosticEntries = createDiagnosticEntries(filePath, result);
+		for (const [targetPath, diagnostics] of diagnosticEntries) {
+			diagnosticCollection.set(vscode.Uri.file(targetPath), diagnostics);
+		}
 
 		if (result.success) {
-			updateStatusBar('success');
-			outputChannel.appendLine(`✓ Compiled successfully → ${result.pdfPath}`);
+			finalState = 'success';
+			outputChannel.appendLine(`✓ Compiled successfully in ${result.durationMs}ms → ${result.pdfPath}`);
 		} else {
 			updateStatusBar('error');
 			outputChannel.appendLine(`✗ Compilation failed`);
@@ -242,12 +270,12 @@ async function compileFile(filePath: string) {
 
 		return result;
 	} catch (e: any) {
-		updateStatusBar('error');
 		outputChannel.appendLine(`✗ Unexpected error: ${e.message}`);
 		vscode.window.showErrorMessage(`TSQX error: ${e.message}`);
 		return undefined;
 	} finally {
-		isCompiling = false;
+		activeCompiles.delete(filePath);
+		updateStatusBar(activeCompiles.size > 0 ? 'compiling' : finalState);
 	}
 }
 
@@ -255,7 +283,7 @@ async function diagnoseToolchain(): Promise<void> {
 	const config = getConfig();
 	const tsqxPath = config.get<string>('tsqxPath', 'tsqx');
 	const asyPath = config.get<string>('asyPath', 'asy');
-	const extraArgs = config.get<string>('extraTsqxArgs', '-p');
+	const extraArgs = normalizeExtraArgs(config.get<unknown>('extraTsqxArgs', ['-p']));
 	const timeout = config.get<number>('compilationTimeout', 30);
 	const autoCompileOnSave = config.get<boolean>('autoCompileOnSave', true);
 	const autoCompileDelay = getAutoCompileDelay();
@@ -268,7 +296,7 @@ async function diagnoseToolchain(): Promise<void> {
 	outputChannel.appendLine('Configuration');
 	outputChannel.appendLine(`- tsqxPath: ${tsqxPath}`);
 	outputChannel.appendLine(`- asyPath: ${asyPath}`);
-	outputChannel.appendLine(`- extraTsqxArgs: ${extraArgs}`);
+	outputChannel.appendLine(`- extraTsqxArgs: ${JSON.stringify(extraArgs)}`);
 	outputChannel.appendLine(`- compilationTimeout: ${timeout}s`);
 	outputChannel.appendLine(`- autoCompileOnSave: ${autoCompileOnSave}`);
 	outputChannel.appendLine(`- autoCompileDelay: ${autoCompileDelay}ms`);
@@ -392,10 +420,15 @@ function refreshOpenPdf(pdfPath: string) {
 
 function updateStatusBar(state?: 'compiling' | 'success' | 'error'): void {
 	const autoCompile = getConfig().get<boolean>('autoCompileOnSave', true);
+	if (statusResetTimer) {
+		clearTimeout(statusResetTimer);
+		statusResetTimer = undefined;
+	}
 
 	switch (state) {
 		case 'compiling':
 			statusBarItem.text = '$(sync~spin) TSQX Compiling...';
+			statusBarItem.command = undefined;
 			statusBarItem.backgroundColor = undefined;
 			statusBarItem.tooltip = 'Compilation in progress';
 			break;
@@ -403,12 +436,14 @@ function updateStatusBar(state?: 'compiling' | 'success' | 'error'): void {
 			statusBarItem.text = '$(check) TSQX';
 			statusBarItem.backgroundColor = undefined;
 			statusBarItem.tooltip = 'Last compilation succeeded';
-			setTimeout(() => updateStatusBar(), 3000);
+			statusBarItem.command = 'tsqx.toggleAutoCompile';
+			statusResetTimer = setTimeout(() => updateStatusBar(), 3000);
 			break;
 		case 'error':
 			statusBarItem.text = '$(error) TSQX';
 			statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
 			statusBarItem.tooltip = 'Last compilation failed. Click for details.';
+			statusBarItem.command = 'tsqx.showOutput';
 			break;
 		default:
 			statusBarItem.text = autoCompile ? '$(eye) TSQX Auto' : '$(eye-closed) TSQX';
@@ -416,6 +451,7 @@ function updateStatusBar(state?: 'compiling' | 'success' | 'error'): void {
 			statusBarItem.tooltip = autoCompile
 				? 'Auto-compile on save: ON (click to toggle)'
 				: 'Auto-compile on save: OFF (click to toggle)';
+			statusBarItem.command = 'tsqx.toggleAutoCompile';
 			break;
 	}
 }
@@ -429,7 +465,11 @@ function updateStatusBarVisibility(editor?: vscode.TextEditor): void {
 }
 
 export function deactivate() {
-	if (compileDebounceTimer) {
-		clearTimeout(compileDebounceTimer);
+	for (const timer of compileDebounceTimers.values()) {
+		clearTimeout(timer);
+	}
+	compileDebounceTimers.clear();
+	if (statusResetTimer) {
+		clearTimeout(statusResetTimer);
 	}
 }

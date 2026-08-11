@@ -28,6 +28,12 @@ export interface CompileOptions {
   tsqxPath: string;
   asyPath: string;
   extraArgs: readonly string[];
+  outputDirectory?: string;
+}
+
+export interface OutputPaths {
+  asyPath: string;
+  pdfPath: string;
 }
 
 interface ProcessResult {
@@ -49,11 +55,12 @@ export async function compileTsqx(
   const startedAt = Date.now();
   const dir = path.dirname(tsqxFilePath);
   const basename = path.basename(tsqxFilePath, path.extname(tsqxFilePath));
-  const asyFilePath = path.join(dir, `${basename}.asy`);
-  const pdfPath = path.join(dir, `${basename}.pdf`);
+  const outputDirectory = options.outputDirectory || dir;
+  const { asyPath: asyFilePath, pdfPath } = getOutputPaths(tsqxFilePath, outputDirectory);
   const timeoutMs = options.timeout * 1000;
   const issues: CompilationIssue[] = [];
-  const tempDir = await fs.promises.mkdtemp(path.join(dir, `.${basename}.tsqx-`));
+  await fs.promises.mkdir(outputDirectory, { recursive: true });
+  const tempDir = await fs.promises.mkdtemp(path.join(outputDirectory, `.${basename}.tsqx-`));
   const tempAsyPath = path.join(tempDir, `${basename}.asy`);
   const tempPdfBase = path.join(tempDir, basename);
   const tempPdfPath = `${tempPdfBase}.pdf`;
@@ -96,6 +103,15 @@ export async function compileTsqx(
   } finally {
     await fs.promises.rm(tempDir, { recursive: true, force: true });
   }
+}
+
+export function getOutputPaths(tsqxFilePath: string, outputDirectory?: string): OutputPaths {
+  const basename = path.basename(tsqxFilePath, path.extname(tsqxFilePath));
+  const directory = outputDirectory || path.dirname(tsqxFilePath);
+  return {
+    asyPath: path.join(directory, `${basename}.asy`),
+    pdfPath: path.join(directory, `${basename}.pdf`),
+  };
 }
 
 export async function isOutputStale(sourcePath: string, outputPath: string): Promise<boolean> {

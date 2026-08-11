@@ -10,6 +10,12 @@ All notable changes to the TSQX Compiler extension will be documented in this fi
 - Replace generated outputs only after validating non-empty artifacts and recompile stale previews
 - Attach Asymptote diagnostics to the generated `.asy` file instead of misleading TSQX source locations
 
+### Added
+- First-use setup for validating the toolchain and configuring output and auto-compile behavior
+- Configurable output directories with workspace-relative subfolder preservation
+- Workspace-wide compilation with progress, cancellation, and result summaries
+- Confirmed cleanup of generated ASY and PDF artifacts
+
 ### Fixed
 - Make status-bar error clicks open compiler output and keep auto-compile toggles scoped to the workspace
 - Repair release workflow validation and support manual recovery for an existing tag

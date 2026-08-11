@@ -19,6 +19,9 @@ Compile [TSQX](https://github.com/vEnhance/tsqx) geometry files to high-quality 
 - **Inline Diagnostics** — Compilation errors and warnings appear directly in the editor's Problems panel.
 - **Status Bar** — Shows compilation status and auto-compile toggle (click to switch on/off).
 - **Configurable Paths** — Point the extension at custom `tsqx` and `asy` executables if they aren't on `$PATH`.
+- **First-Use Setup** — Check the toolchain and choose output and auto-compile behavior from a guided setup.
+- **Project Output Directory** — Keep generated files beside sources or under a workspace build folder without filename collisions.
+- **Workspace Compilation** — Compile every `.tsqx` file with progress, cancellation, and a result summary.
 
 ## Quick Start
 
@@ -43,6 +46,9 @@ Compile [TSQX](https://github.com/vEnhance/tsqx) geometry files to high-quality 
 | TSQX: Open Generated ASY | — | Open the generated `.asy` file beside the editor |
 | TSQX: Diagnose Toolchain | — | Check `tsqx` / `asy` commands, versions, and current extension settings |
 | TSQX: Show Compiler Output | — | Open detailed compiler logs |
+| TSQX: Run First-Use Setup | — | Check tools and configure output and auto-compile behavior |
+| TSQX: Compile All Files in Workspace | — | Compile every `.tsqx` file in the workspace |
+| TSQX: Clean Generated Artifacts | — | Delete the current file's generated ASY and PDF after confirmation |
 | TSQX: Toggle Auto Compile on Save | — | Enable / disable auto-compile |
 | TSQX: Set Current File as TSQX | — | Mark a `.txt` file as TSQX |
 
@@ -55,11 +61,18 @@ Compile [TSQX](https://github.com/vEnhance/tsqx) geometry files to high-quality 
   "tsqx.compilationTimeout": 30,    // max seconds per compilation
   "tsqx.tsqxPath": "tsqx",          // path to tsqx executable
   "tsqx.asyPath": "asy",            // path to Asymptote executable
+  "tsqx.outputDirectory": "",       // empty: beside source; e.g. ".tsqx-build"
   "tsqx.extraTsqxArgs": ["-p"]      // extra CLI args; each argument is a separate array item
 }
 ```
 
 For example, use `["-p", "-s", "200"]` to pass a size. Legacy string values remain supported. Commands are executed directly without a shell.
+
+Relative output directories are resolved from the workspace root. The source folder structure is retained below that directory, so `chapter1/figures/a.tsqx` becomes `.tsqx-build/chapter1/figures/a.pdf`. Absolute paths and the `${workspaceFolder}` / `${fileDirname}` variables are also supported.
+
+## First-Use Setup
+
+When the first TSQX editor opens, the extension offers to run setup. It checks the configured `tsqx` and `asy` commands, then lets you choose whether outputs stay beside source files or under `.tsqx-build`, and whether save-time compilation is enabled. Run **TSQX: Run First-Use Setup** at any time to repeat it.
 
 ## Development
 
@@ -95,7 +108,9 @@ Release workflow details are documented in [docs/RELEASE.md](./docs/RELEASE.md).
 The extension adds a **TSQX** panel to the Activity Bar (left sidebar) with quick-access buttons:
 
 - **Compile Current File** — run the tsqx → asy → pdf pipeline
+- **Compile Workspace** — compile all TSQX sources sequentially with progress and cancellation
 - **Preview PDF** — open the PDF in a side panel
+- **Clean Generated Artifacts** — remove the selected source's generated ASY and PDF after confirmation
 - **Toggle Auto-Compile** — switch auto-compile on save on/off
 - **Set File as TSQX** — mark a `.txt` file for TSQX support
 

@@ -100,6 +100,24 @@
         "category": "TSQX"
       },
       {
+        "command": "tsqx.setup",
+        "title": "Run First-Use Setup",
+        "icon": "$(gear)",
+        "category": "TSQX"
+      },
+      {
+        "command": "tsqx.compileWorkspace",
+        "title": "Compile All Files in Workspace",
+        "icon": "$(run-all)",
+        "category": "TSQX"
+      },
+      {
+        "command": "tsqx.cleanArtifacts",
+        "title": "Clean Generated Artifacts",
+        "icon": "$(trash)",
+        "category": "TSQX"
+      },
+      {
         "command": "tsqx.toggleAutoCompile",
         "title": "Toggle Auto Compile on Save",
         "category": "TSQX"
@@ -133,6 +151,11 @@
           "command": "tsqx.diagnoseToolchain",
           "when": "view == tsqx-commands",
           "group": "navigation@1"
+        },
+        {
+          "command": "tsqx.compileWorkspace",
+          "when": "view == tsqx-commands",
+          "group": "navigation@2"
         }
       ],
       "editor/context": [
@@ -153,6 +176,11 @@
         },
         {
           "command": "tsqx.diagnoseToolchain",
+          "when": "resourceLangId == tsqx",
+          "group": "7_modification"
+        },
+        {
+          "command": "tsqx.cleanArtifacts",
           "when": "resourceLangId == tsqx",
           "group": "7_modification"
         },
@@ -180,6 +208,11 @@
         },
         {
           "command": "tsqx.diagnoseToolchain",
+          "when": "resourceExtname == .tsqx",
+          "group": "7_modification"
+        },
+        {
+          "command": "tsqx.cleanArtifacts",
           "when": "resourceExtname == .tsqx",
           "group": "7_modification"
         }
@@ -238,6 +271,11 @@
           "type": "string",
           "default": "asy",
           "description": "Path to the Asymptote (asy) executable"
+        },
+        "tsqx.outputDirectory": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Directory for generated ASY and PDF files. Empty writes beside each source. Relative paths are resolved from the workspace and preserve source subfolders. Supports `${workspaceFolder}` and `${fileDirname}`."
         },
         "tsqx.extraTsqxArgs": {
           "type": [

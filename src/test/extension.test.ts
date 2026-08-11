@@ -15,6 +15,9 @@ suite('Extension Test Suite', () => {
 		assert.ok(commands.includes('tsqx.openGeneratedAsy'));
 		assert.ok(commands.includes('tsqx.diagnoseToolchain'));
 		assert.ok(commands.includes('tsqx.showOutput'));
+		assert.ok(commands.includes('tsqx.setup'));
+		assert.ok(commands.includes('tsqx.compileWorkspace'));
+		assert.ok(commands.includes('tsqx.cleanArtifacts'));
 		assert.ok(commands.includes('tsqx.toggleAutoCompile'));
 		assert.ok(commands.includes('tsqx.setLanguage'));
 	});
@@ -26,6 +29,7 @@ suite('Extension Test Suite', () => {
 		assert.strictEqual(config.get('autoCompileDelay'), 1000);
 		assert.strictEqual(config.get('compilationTimeout'), 30);
 		assert.deepStrictEqual(config.get('extraTsqxArgs'), ['-p']);
+		assert.strictEqual(config.get('outputDirectory'), '');
 	});
 
 	test('routes generated Asymptote diagnostics to the ASY file', () => {

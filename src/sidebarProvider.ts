@@ -31,9 +31,12 @@ export class TsqxSidebarProvider implements vscode.TreeDataProvider<CommandTreeI
 
 		return [
 			{ label: 'Compile Current File', command: 'tsqx.compile', icon: 'play' },
+			{ label: 'Compile Workspace', command: 'tsqx.compileWorkspace', icon: 'run-all' },
 			{ label: 'Preview PDF', command: 'tsqx.preview', icon: 'open-preview' },
 			{ label: 'Open Generated ASY', command: 'tsqx.openGeneratedAsy', icon: 'code' },
+			{ label: 'Clean Generated Artifacts', command: 'tsqx.cleanArtifacts', icon: 'trash' },
 			{ label: 'Diagnose Toolchain', command: 'tsqx.diagnoseToolchain', icon: 'tools' },
+			{ label: 'First-Use Setup', command: 'tsqx.setup', icon: 'gear' },
 			{
 				label: 'Toggle Auto-Compile',
 				command: 'tsqx.toggleAutoCompile',

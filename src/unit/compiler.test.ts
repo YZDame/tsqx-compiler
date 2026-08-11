@@ -80,6 +80,36 @@ fs.writeFileSync(args[outputIndex + 1] + '.pdf', '%PDF-new');`);
   }
 });
 
+test('compileTsqx creates and uses a configured output directory', { skip: process.platform === 'win32' }, async () => {
+  const fixture = await createFixture();
+  try {
+    const outputDirectory = path.join(fixture.dir, 'generated files');
+    const tsqx = await createExecutable(fixture.dir, 'output-tsqx', `
+process.stdin.resume();
+process.stdin.on('end', () => process.stdout.write('// generated'));`);
+    const asy = await createExecutable(fixture.dir, 'output-asy', `
+import fs from 'node:fs';
+const args = process.argv.slice(2);
+const outputIndex = args.indexOf('-o');
+fs.writeFileSync(args[outputIndex + 1] + '.pdf', '%PDF-output');`);
+
+    const result = await compileTsqx(fixture.sourcePath, {
+      timeout: 2,
+      tsqxPath: tsqx,
+      asyPath: asy,
+      extraArgs: [],
+      outputDirectory,
+    });
+
+    assert.equal(result.success, true);
+    assert.equal(result.asyPath, path.join(outputDirectory, 'figure with spaces.asy'));
+    assert.equal(result.pdfPath, path.join(outputDirectory, 'figure with spaces.pdf'));
+    assert.equal(await fs.promises.readFile(result.pdfPath, 'utf8'), '%PDF-output');
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
 test('compileTsqx keeps prior outputs when TSQX fails', { skip: process.platform === 'win32' }, async () => {
   const fixture = await createFixture();
   try {

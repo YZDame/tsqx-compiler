@@ -4,6 +4,8 @@ All notable changes to the TSQX Compiler extension will be documented in this fi
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-11
+
 ### Changed
 - Run `tsqx` and `asy` without a shell and accept argument arrays while retaining legacy string configuration support
 - Queue compilation per file so saves during an active compile trigger a final up-to-date rebuild

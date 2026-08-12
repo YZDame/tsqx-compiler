@@ -1,8 +1,8 @@
 # TSQX 编译器
 
-[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/LYDT.tsqx-compiler?label=VS%20Code%20Marketplace&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=LYDT.tsqx-compiler)
-[![安装量](https://img.shields.io/visual-studio-marketplace/i/LYDT.tsqx-compiler?logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=LYDT.tsqx-compiler)
-[![评分](https://img.shields.io/visual-studio-marketplace/r/LYDT.tsqx-compiler?logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=LYDT.tsqx-compiler)
+[VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=LYDT.tsqx-compiler)
+[![最新版本](https://img.shields.io/github/v/release/YZDame/tsqx-compiler)](https://github.com/YZDame/tsqx-compiler/releases/latest)
+[![CI](https://github.com/YZDame/tsqx-compiler/actions/workflows/ci.yml/badge.svg)](https://github.com/YZDame/tsqx-compiler/actions/workflows/ci.yml)
 [![GitHub Stars](https://img.shields.io/github/stars/YZDame/tsqx-compiler?style=social)](https://github.com/YZDame/tsqx-compiler)
 [![许可证](https://img.shields.io/github/license/YZDame/tsqx-compiler)](https://github.com/YZDame/tsqx-compiler/blob/main/LICENSE)
 

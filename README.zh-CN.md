@@ -125,7 +125,7 @@ npm run smoke:compile -- /Users/leyudame/Documents/tsqx/examples/figures/fig1.ts
 
 ## 活动栏
 
-扩展在活动栏（左侧边栏）中添加了一个 **TSQX** 面板，包含快捷访问按钮：
+扩展在活动栏（左侧边栏）中添加了一个 **TSQX** 面板。命令按**创建与编译**、**预览与导出**、**工具与设置**分组，每组都可以折叠或展开：
 
 - **编译当前文件** — 运行 tsqx → asy → pdf 流水线
 - **从模板新建图形** — 选择保存位置并创建常见 TSQX 作图文件

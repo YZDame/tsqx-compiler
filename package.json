@@ -2,7 +2,7 @@
   "name": "tsqx-compiler",
   "displayName": "TSQX Compiler",
   "description": "Compile TSQX geometry files to Asymptote and PDF with live preview",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "publisher": "LYDT",
   "license": "MIT",
   "icon": "images/icon.png",
@@ -387,14 +387,14 @@
     "access": "public"
   },
   "devDependencies": {
-    "@types/vscode": "^1.109.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
-    "typescript-eslint": "^8.56.1",
+    "@types/vscode": "^1.109.0",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^3.0.0",
     "eslint": "^9.39.3",
     "typescript": "^5.9.3",
-    "@vscode/test-cli": "^0.0.12",
-    "@vscode/test-electron": "^2.5.2",
-    "@vscode/vsce": "^3.0.0"
+    "typescript-eslint": "^8.56.1"
   }
 }

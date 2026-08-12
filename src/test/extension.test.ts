@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { createDiagnosticEntries } from '../diagnostics';
 import { PreviewManager } from '../previewManager';
+import { TsqxSidebarProvider } from '../sidebarProvider';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -40,6 +41,26 @@ suite('Extension Test Suite', () => {
 		assert.strictEqual(config.get('outputDirectory'), '');
 		assert.strictEqual(config.get('pdfConverterPath'), 'pdftocairo');
 		assert.strictEqual(config.get('pngDpi'), 144);
+	});
+
+	test('groups sidebar commands into collapsible sections', () => {
+		const provider = new TsqxSidebarProvider();
+		const groups = provider.getChildren();
+		assert.deepStrictEqual(
+			groups.map(group => group.label),
+			['Create & Compile', 'Preview & Export', 'Tools & Settings']
+		);
+
+		for (const group of groups) {
+			assert.strictEqual(group.kind, 'group');
+			if (group.kind === 'group') {
+				assert.ok(provider.getChildren(group).length > 0);
+				assert.notStrictEqual(
+					provider.getTreeItem(group).collapsibleState,
+					vscode.TreeItemCollapsibleState.None
+				);
+			}
+		}
 	});
 
 	test('routes generated Asymptote diagnostics to the ASY file', () => {

@@ -125,7 +125,7 @@ Release workflow details are documented in [docs/RELEASE.md](./docs/RELEASE.md).
 
 ## Activity Bar
 
-The extension adds a **TSQX** panel to the Activity Bar (left sidebar) with quick-access buttons:
+The extension adds a **TSQX** panel to the Activity Bar (left sidebar). Commands are arranged in collapsible **Create & Compile**, **Preview & Export**, and **Tools & Settings** groups:
 
 - **Compile Current File** — run the tsqx → asy → pdf pipeline
 - **New Figure from Template** — choose a save location and create a common TSQX construction

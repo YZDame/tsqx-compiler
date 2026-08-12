@@ -4,6 +4,15 @@ All notable changes to the TSQX Compiler extension will be documented in this fi
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-12
+
+### Changed
+- Redesign the Marketplace icon while preserving the TSQX triangle-and-incircle identity
+- Organize Activity Bar commands into collapsible create/compile, preview/export, and tools/settings groups
+
+### Fixed
+- Update the VS Code extension test runner for current macOS application bundle layouts
+
 ## [0.3.1] - 2026-08-11
 
 ### Fixed

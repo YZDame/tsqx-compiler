@@ -4,6 +4,11 @@ All notable changes to the TSQX Compiler extension will be documented in this fi
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-08-12
+
+### Changed
+- Refresh README badges in the published extension documentation
+
 ## [0.4.0] - 2026-08-12
 
 ### Changed

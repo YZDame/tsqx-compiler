@@ -87,6 +87,32 @@ suite('Extension Test Suite', () => {
 		assert.strictEqual(diagnostics?.[0].range.start.line, 3);
 		assert.strictEqual(diagnostics?.[0].range.start.character, 1);
 		assert.strictEqual(diagnostics?.[0].source, 'TSQX Compiler (asy)');
+
+		const sourceDiagnostics = entries.get(tsqxPath);
+		assert.strictEqual(sourceDiagnostics?.length, 1);
+		assert.match(sourceDiagnostics?.[0].message ?? '', /generated ASY line 4/);
+		assert.strictEqual(sourceDiagnostics?.[0].range.start.line, 0);
+		assert.strictEqual(sourceDiagnostics?.[0].relatedInformation?.[0].location.range.start.line, 3);
+	});
+
+	test('does not invent ASY source mappings for TSQX-stage errors', () => {
+		const source = '/tmp/failure.tsqx';
+		const entries = createDiagnosticEntries(source, {
+			success: false,
+			asyPath: '/tmp/failure.asy',
+			pdfPath: '/tmp/failure.pdf',
+			errors: ['Invalid syntax'],
+			warnings: [],
+			durationMs: 5,
+			issues: [{
+				severity: 'error',
+				stage: 'tsqx',
+				message: 'Invalid syntax',
+				targetPath: source,
+			}],
+		});
+		assert.strictEqual(entries.get(source)?.length, 1);
+		assert.strictEqual(entries.get(source)?.[0].source, 'TSQX Compiler (tsqx)');
 	});
 
 	test('provides completion, hover, symbols, and definition navigation', async () => {
@@ -108,6 +134,11 @@ suite('Extension Test Suite', () => {
 			new vscode.Position(1, 5)
 		);
 		assert.ok(hovers.length > 0);
+		const builtinHover = hovers
+			.flatMap(hover => hover.contents)
+			.find(content => content instanceof vscode.MarkdownString);
+		assert.ok(builtinHover instanceof vscode.MarkdownString);
+		assert.ok(builtinHover.value.includes('docs/syntax-reference.md'));
 
 		const symbols = await vscode.commands.executeCommand<vscode.DocumentSymbol[]>(
 			'vscode.executeDocumentSymbolProvider',

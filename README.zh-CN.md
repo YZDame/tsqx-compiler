@@ -26,6 +26,12 @@
 - **语言辅助** — 内置函数与点补全、悬停文档、文档大纲和定义跳转
 - **SVG 与 PNG 导出** — 通过 Poppler 转换正式 PDF，并可设置 PNG 分辨率
 
+## TSQX 项目导航
+
+- **中文手册与实例**：[tsqx-book](https://github.com/YZDame/tsqx-book)（[语法参考](https://github.com/YZDame/tsqx-book/blob/main/docs/syntax-reference.md)）
+- **AI 辅助几何作图**：[tsqx-gen-skill](https://github.com/YZDame/tsqx-gen-skill)
+- **语言实现**：[vEnhance/tsqx](https://github.com/vEnhance/tsqx)（上游）
+
 ## 快速开始
 
 1. 打开一个 `.tsqx` 文件
@@ -87,6 +93,12 @@
 ## 语言辅助
 
 补全内容包括有文档依据的 TSQX 几何函数、当前文档已定义的点、颜色和画笔样式。悬停会显示函数签名或最近一次点定义；“大纲”视图列出点定义；“转到定义”可跟踪当前文件中的点引用。静态代码片段前缀包括 `tsqx-triangle`、`tsqx-point`、`tsqx-foot`、`tsqx-fill` 和 `tsqx-asy`。
+
+## 错误诊断与旧版预览
+
+Asymptote 编译错误的行号属于**生成的 `.asy` 文件**，并不必然对应到 `.tsqx` 的同一行。插件会在原始 TSQX 文件显示失败摘要，并在“问题”面板保留精确的 ASY 位置链接；可使用“打开生成的 ASY”定位具体错误。
+
+如果编译失败，已打开的预览会继续显示上一次成功生成的图，同时提示“当前预览并非最新编译结果”。重新编译成功后会刷新并清除提示。
 
 ## 预览与导出
 

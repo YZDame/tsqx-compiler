@@ -24,5 +24,39 @@ export function createDiagnosticEntries(
     entries.set(targetPath, diagnostics);
   }
 
+  // ASY line numbers belong to the generated file, not the original TSQX.
+  // Surface a source-level failure without claiming a false line mapping,
+  // and keep a navigable link to the precise generated ASY location.
+  const asyError = result.success ? undefined : result.issues.find(
+    issue => issue.stage === 'asy' && issue.severity === 'error'
+  );
+  if (asyError) {
+    const sourceMessage = asyError.line
+      ? `Asymptote compilation failed (generated ASY line ${asyError.line}): ${asyError.message}`
+      : `Asymptote compilation failed: ${asyError.message}`;
+    const diagnostic = new vscode.Diagnostic(
+      new vscode.Range(0, 0, 0, 1),
+      `${sourceMessage}. Open the generated .asy file to inspect the error.`,
+      vscode.DiagnosticSeverity.Error
+    );
+    diagnostic.source = 'TSQX Compiler (generated ASY)';
+    if (asyError.line) {
+      const generatedLocation = new vscode.Location(
+        vscode.Uri.file(result.asyPath),
+        new vscode.Position(
+          Math.max(0, asyError.line - 1),
+          Math.max(0, (asyError.column ?? 1) - 1)
+        )
+      );
+      diagnostic.relatedInformation = [
+        new vscode.DiagnosticRelatedInformation(
+          generatedLocation,
+          'Generated Asymptote error location (not a TSQX source line).'
+        ),
+      ];
+    }
+    entries.get(tsqxFilePath)?.push(diagnostic);
+  }
+
   return entries;
 }

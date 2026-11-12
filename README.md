@@ -92,6 +92,8 @@ When the first TSQX editor opens, the extension offers to run setup. It checks t
 
 ## Language Assistance
 
+Builtin function completion and hover help include a link to the [TSQX syntax reference](https://github.com/YZDame/tsqx-book/blob/main/docs/syntax-reference.md) for further reading.
+
 Completion includes documented TSQX geometry functions, points already defined in the current document, colors, and pen styles. Hover shows function signatures or the nearest preceding point definition. The Outline view lists point definitions, and **Go to Definition** follows point references in the current file. Static snippets are available with prefixes such as `tsqx-triangle`, `tsqx-point`, `tsqx-foot`, `tsqx-fill`, and `tsqx-asy`.
 
 ## Diagnostics and Failed Previews

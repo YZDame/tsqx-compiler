@@ -42,7 +42,7 @@
 
 | 工具 | 安装方式 |
 |------|---------|
-| **tsqx** | `pip install tsqx` 或从仓库 `pip install -e .` |
+| **tsqx** | `pip install tsqx`（上游发行包）；若需可编辑安装，请先克隆 [vEnhance/tsqx](https://github.com/vEnhance/tsqx)，再在**上游仓库**执行 `pip install -e .` |
 | **Asymptote** | `brew install asymptote` (macOS) / `apt install asymptote` (Linux) / [Windows 安装程序](https://asymptote.sourceforge.io/) |
 | **Poppler** | `brew install poppler`（macOS）/ `apt install poppler-utils`（Linux）；持久预览和 SVG/PNG 导出需要 |
 | **VS Code** | ≥ 1.109.0 |
@@ -91,6 +91,8 @@
 第一次打开 TSQX 编辑器时，扩展会询问是否运行设置向导。向导会检查已配置的 `tsqx`、`asy` 和 `pdftocairo` 命令，然后选择将产物放在源码旁或 `.tsqx-build` 中，并设置是否保存时自动编译。之后可随时运行 **TSQX: 运行首次使用设置**。
 
 ## 语言辅助
+
+函数代码补全和 Hover 的帮助信息现在包含 [TSQX 中文语法参考](https://github.com/YZDame/tsqx-book/blob/main/docs/syntax-reference.md) 的入口。
 
 补全内容包括有文档依据的 TSQX 几何函数、当前文档已定义的点、颜色和画笔样式。悬停会显示函数签名或最近一次点定义；“大纲”视图列出点定义；“转到定义”可跟踪当前文件中的点引用。静态代码片段前缀包括 `tsqx-triangle`、`tsqx-point`、`tsqx-foot`、`tsqx-fill` 和 `tsqx-asy`。
 

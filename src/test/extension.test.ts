@@ -134,6 +134,11 @@ suite('Extension Test Suite', () => {
 			new vscode.Position(1, 5)
 		);
 		assert.ok(hovers.length > 0);
+		const builtinHover = hovers
+			.flatMap(hover => hover.contents)
+			.find(content => content instanceof vscode.MarkdownString);
+		assert.ok(builtinHover instanceof vscode.MarkdownString);
+		assert.ok(builtinHover.value.includes('docs/syntax-reference.md'));
 
 		const symbols = await vscode.commands.executeCommand<vscode.DocumentSymbol[]>(
 			'vscode.executeDocumentSymbolProvider',

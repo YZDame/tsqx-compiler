@@ -330,6 +330,11 @@ async function performCompile(filePath: string, notifyUser: boolean): Promise<Co
 			outputChannel.appendLine(`✓ Compiled successfully in ${result.durationMs}ms → ${result.pdfPath}`);
 		} else {
 			updateStatusBar('error');
+			// Keep the last successful diagram visible, but mark it as stale.
+			previewManager.showError(
+				filePath,
+				'Compilation failed — showing the previous successful preview. Check Problems or Compiler Output.'
+			);
 			outputChannel.appendLine(`✗ Compilation failed`);
 			for (const err of result.errors) {
 				outputChannel.appendLine(`  Error: ${err}`);
@@ -352,6 +357,10 @@ async function performCompile(filePath: string, notifyUser: boolean): Promise<Co
 
 		return result;
 	} catch (e: any) {
+		previewManager.showError(
+			filePath,
+			'Compilation failed — showing the previous successful preview. Check Compiler Output.'
+		);
 		outputChannel.appendLine(`✗ Unexpected error: ${e.message}`);
 		if (notifyUser) {
 			vscode.window.showErrorMessage(`TSQX error: ${e.message}`);

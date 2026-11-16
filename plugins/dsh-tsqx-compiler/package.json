@@ -1,0 +1,35 @@
+{
+  "name": "dsh-tsqx-compiler",
+  "version": "0.1.0",
+  "description": "DeepSeek Harness tool and skill for TSQX geometry snippets and compilation to Asymptote and PDF.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./index.mjs",
+  "exports": {
+    ".": "./index.mjs",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.mjs",
+    "compile.mjs",
+    "cordis.patch.yml",
+    "lib/",
+    "snippets/",
+    "SKILL.md"
+  ],
+  "engines": {
+    "node": ">=22.12"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YZDame/tsqx-compiler.git",
+    "directory": "plugins/dsh-tsqx-compiler"
+  },
+  "keywords": ["dsh", "dsh-plugin", "deepseek-harness", "tsqx", "asymptote", "geometry"],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

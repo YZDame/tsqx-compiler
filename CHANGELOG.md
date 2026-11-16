@@ -4,6 +4,16 @@ All notable changes to the TSQX Compiler extension will be documented in this fi
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-16
+
+### Added
+- Browse, search, and insert 21 TSQX snippets, including intersections, triangle centers, and circle constructions.
+- Release the DeepSeek Harness plugin as an installable tarball with shared snippets, templates, and compilation.
+
+### Changed
+- Split the Activity Bar into Build, Preview & Export, Snippets, and Tools & Settings views.
+- Redraw the Marketplace icon with a light background and a triangle-and-incircle mark.
+
 ## [0.4.1] - 2026-08-12
 
 ### Changed

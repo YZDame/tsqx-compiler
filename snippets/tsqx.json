@@ -6,26 +6,133 @@
       "",
       "${1:A}--${2:B}--${3:C}--cycle / ${4:0.10 lightcyan} / ${5:blue}"
     ],
-    "description": "Create and draw a basic TSQX triangle"
+    "description": "Create and draw a basic TSQX triangle",
+    "category": "Starting Shapes"
+  },
+  "Regular polygon": {
+    "prefix": "tsqx-regular",
+    "body": [
+      "~regular ${1:A} ${2:B} ${3:C} ${4:D} ${5:E}",
+      "${1:A}--${2:B}--${3:C}--${4:D}--${5:E}--cycle / ${6:blue}"
+    ],
+    "description": "Define five equally spaced vertices and draw the polygon",
+    "category": "Starting Shapes"
   },
   "Point definition": {
     "prefix": "tsqx-point",
     "body": "${1:P} ${2:45} = ${3:dir 90}",
-    "description": "Define a labeled TSQX point"
+    "description": "Define a labeled TSQX point",
+    "category": "Points & Intersections"
+  },
+  "Point at coordinates": {
+    "prefix": "tsqx-coords",
+    "body": "${1:P} ${2:NE} = (${3:1}, ${4:2})",
+    "description": "Define a point and set its label direction",
+    "category": "Points & Intersections"
+  },
+  "Unmarked point": {
+    "prefix": "tsqx-unmarked",
+    "body": "${1:P} : = (${2:1}, ${3:2})",
+    "description": "Define a point with no dot or label",
+    "category": "Points & Intersections"
+  },
+  "Midpoint": {
+    "prefix": "tsqx-midpoint",
+    "body": "${1:M} = midpoint ${2:A}--${3:B}",
+    "description": "Define the midpoint of segment AB",
+    "category": "Points & Intersections"
   },
   "Perpendicular foot": {
     "prefix": "tsqx-foot",
     "body": "${1:D} = foot ${2:P} ${3:A} ${4:B}",
-    "description": "Define the perpendicular foot from P to AB"
+    "description": "Define the perpendicular foot from P to AB",
+    "category": "Points & Intersections"
+  },
+  "Intersection of two lines": {
+    "prefix": "tsqx-intersection",
+    "body": "${1:X} = extension ${2:A} ${3:B} ${4:C} ${5:D}",
+    "description": "Find the intersection of lines AB and CD",
+    "category": "Points & Intersections"
+  },
+  "Two path intersections": {
+    "prefix": "tsqx-path-intersections",
+    "body": [
+      "${1:X} = IP (${3:Line A B}) (${4:unitcircle})",
+      "${2:Y} = OP (${3:Line A B}) (${4:unitcircle})"
+    ],
+    "description": "Define both intersection points of two paths",
+    "category": "Points & Intersections"
+  },
+  "Incenter": {
+    "prefix": "tsqx-incenter",
+    "body": "${1:I} = incenter ${2:A} ${3:B} ${4:C}",
+    "description": "Define the incenter of triangle ABC",
+    "category": "Triangle Centers & Circles"
+  },
+  "Circumcenter": {
+    "prefix": "tsqx-circumcenter",
+    "body": "${1:O} = circumcenter ${2:A} ${3:B} ${4:C}",
+    "description": "Define the circumcenter of triangle ABC",
+    "category": "Triangle Centers & Circles"
+  },
+  "Orthocenter": {
+    "prefix": "tsqx-orthocenter",
+    "body": "${1:H} = orthocenter ${2:A} ${3:B} ${4:C}",
+    "description": "Define the orthocenter of triangle ABC",
+    "category": "Triangle Centers & Circles"
+  },
+  "Centroid": {
+    "prefix": "tsqx-centroid",
+    "body": "${1:G} = centroid ${2:A} ${3:B} ${4:C}",
+    "description": "Define the centroid of triangle ABC",
+    "category": "Triangle Centers & Circles"
+  },
+  "Incircle": {
+    "prefix": "tsqx-incircle",
+    "body": "incircle ${1:A} ${2:B} ${3:C} / ${4:darkgreen}",
+    "description": "Draw the incircle of triangle ABC",
+    "category": "Triangle Centers & Circles"
+  },
+  "Circumcircle": {
+    "prefix": "tsqx-circumcircle",
+    "body": "circumcircle ${1:A} ${2:B} ${3:C} / ${4:blue}",
+    "description": "Draw the circumcircle of triangle ABC",
+    "category": "Triangle Centers & Circles"
+  },
+  "Circle through a point": {
+    "prefix": "tsqx-circle-point",
+    "body": "CP ${1:O} ${2:A} / ${3:blue}",
+    "description": "Draw the circle centered at O through A",
+    "category": "Triangle Centers & Circles"
+  },
+  "Circle with radius": {
+    "prefix": "tsqx-circle-radius",
+    "body": "CR ${1:O} ${2:1} / ${3:blue}",
+    "description": "Draw the circle centered at O with a given radius",
+    "category": "Triangle Centers & Circles"
+  },
+  "Styled segment": {
+    "prefix": "tsqx-segment",
+    "body": "${1:A}--${2:B} / ${3:dashed gray}",
+    "description": "Draw a segment with a specified stroke",
+    "category": "Drawing & Styling"
+  },
+  "Extended line": {
+    "prefix": "tsqx-line",
+    "body": "Line ${1:A} ${2:B} / ${3:gray}",
+    "description": "Draw a line extending past A and B",
+    "category": "Drawing & Styling"
   },
   "Filled polygon": {
     "prefix": "tsqx-fill",
     "body": "${1:A}--${2:B}--${3:C}--cycle / ${4:0.12 lightcyan} / ${5:blue}",
-    "description": "Draw a filled polygon with an outline"
+    "description": "Draw a filled polygon with an outline",
+    "category": "Drawing & Styling"
   },
   "Direct Asymptote": {
     "prefix": "tsqx-asy",
     "body": "!${1:draw((0,0)--(1,0));}",
-    "description": "Insert a direct Asymptote command"
+    "description": "Insert a direct Asymptote command",
+    "category": "Drawing & Styling"
   }
 }

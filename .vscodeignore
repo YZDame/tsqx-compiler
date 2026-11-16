@@ -14,3 +14,5 @@ AGENTS.md
 eslint.config.mjs
 tsconfig.json
 package-lock.json
+plugins/**
+dist/**

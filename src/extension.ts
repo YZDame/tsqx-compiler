@@ -15,6 +15,7 @@ import { createDiagnosticEntries } from './diagnostics';
 import { CompileCoordinator } from './compileCoordinator';
 import { resolveOutputDirectory } from './outputDirectory';
 import { TsqxSidebarProvider } from './sidebarProvider';
+import { registerSnippetView } from './snippetView';
 import { registerLanguageFeatures } from './languageFeatures';
 import { openFigureTemplate } from './templates';
 import { convertPdf, ExportFormat } from './pdfConverter';
@@ -29,7 +30,6 @@ const compileDebounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const compileCoordinator = new CompileCoordinator<CompilationResult | undefined>();
 const activeCompiles = new Set<string>();
 let statusResetTimer: ReturnType<typeof setTimeout> | undefined;
-let sidebarProvider: TsqxSidebarProvider;
 let previewManager: PreviewManager;
 let extensionContext: vscode.ExtensionContext;
 
@@ -62,10 +62,13 @@ export function activate(context: vscode.ExtensionContext) {
 	updateStatusBarVisibility(vscode.window.activeTextEditor);
 
 	// --- Sidebar ---
-	sidebarProvider = new TsqxSidebarProvider();
-	context.subscriptions.push(
-		vscode.window.registerTreeDataProvider('tsqx-commands', sidebarProvider)
-	);
+	const settingsView = new TsqxSidebarProvider('tsqx-tools');
+	context.subscriptions.push(settingsView, vscode.window.registerTreeDataProvider('tsqx-tools', settingsView));
+	for (const view of ['tsqx-commands', 'tsqx-preview-export'] as const) {
+		const provider = new TsqxSidebarProvider(view);
+		context.subscriptions.push(provider, vscode.window.registerTreeDataProvider(view, provider));
+	}
+	registerSnippetView(context);
 	registerLanguageFeatures(context);
 	previewManager = new PreviewManager();
 	context.subscriptions.push(previewManager);
@@ -187,7 +190,7 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showInformationMessage(
 				`TSQX auto-compile on save: ${!current ? 'enabled' : 'disabled'}`
 			);
-			sidebarProvider.refresh();
+			settingsView.refresh();
 		})
 	);
 
@@ -230,7 +233,7 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.workspace.onDidChangeConfiguration((e) => {
 			if (e.affectsConfiguration('tsqx')) {
 				updateStatusBar();
-				sidebarProvider.refresh();
+				settingsView.refresh();
 			}
 		})
 	);
@@ -239,6 +242,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.window.onDidChangeActiveTextEditor((editor) => {
 			updateStatusBarVisibility(editor);
+			settingsView.refresh();
 			void maybeOfferSetup(context, editor);
 		})
 	);

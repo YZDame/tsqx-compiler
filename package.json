@@ -44,7 +44,20 @@
       "tsqx-explorer": [
         {
           "id": "tsqx-commands",
-          "name": "Commands"
+          "name": "Build"
+        },
+        {
+          "id": "tsqx-preview-export",
+          "name": "Preview & Export"
+        },
+        {
+          "id": "tsqx-snippets",
+          "name": "Snippets"
+        },
+        {
+          "id": "tsqx-tools",
+          "name": "Tools & Settings",
+          "visibility": "collapsed"
         }
       ]
     },
@@ -156,6 +169,12 @@
         "command": "tsqx.setLanguage",
         "title": "Set Current File as TSQX",
         "category": "TSQX"
+      },
+      {
+        "command": "tsqx.insertSnippet",
+        "title": "Insert Snippet",
+        "icon": "$(symbol-snippet)",
+        "category": "TSQX"
       }
     ],
     "menus": {
@@ -179,13 +198,13 @@
         },
         {
           "command": "tsqx.diagnoseToolchain",
-          "when": "view == tsqx-commands",
-          "group": "navigation@1"
+          "when": "view == tsqx-tools",
+          "group": "navigation"
         },
         {
-          "command": "tsqx.compileWorkspace",
-          "when": "view == tsqx-commands",
-          "group": "navigation@2"
+          "command": "tsqx.insertSnippet",
+          "when": "view == tsqx-snippets && editorLangId == tsqx",
+          "group": "navigation"
         }
       ],
       "editor/context": [
@@ -284,6 +303,10 @@
         },
         {
           "command": "tsqx.diagnoseToolchain"
+        },
+        {
+          "command": "tsqx.insertSnippet",
+          "when": "editorLangId == tsqx"
         }
       ]
     },
@@ -380,6 +403,8 @@
     "smoke:templates": "node ./scripts/smoke-templates.mjs",
     "presmoke:export": "npm run compile",
     "smoke:export": "node ./scripts/smoke-export.mjs",
+    "prepackage:dsh": "npm run compile",
+    "package:dsh": "node ./scripts/package-dsh.mjs",
     "package:vsix": "vsce package",
     "package": "npm run package:vsix"
   },

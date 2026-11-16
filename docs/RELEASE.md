@@ -62,10 +62,12 @@ Pushing a tag like `v0.1.1` triggers `.github/workflows/release.yml`, which:
 - verifies the git tag matches `package.json`
 - runs `npm run check`
 - builds a `.vsix`
-- creates a GitHub Release and uploads the `.vsix`
+- packages the DSH bundle with `npm run package:dsh` and uploads it alongside the `.vsix`
 - publishes to the VS Code Marketplace when `VSCE_PAT` is configured
 
 The workflow can also be started manually for an existing tag. Manual recovery does not publish to the Marketplace unless explicitly requested.
+
+The DSH package has its own version in `plugins/dsh-tsqx-compiler/package.json`. To build the installable tarball locally, run `npm ci` and `npm run package:dsh`. The tarball is written to `dist/`.
 
 ## Required Secrets
 

@@ -55,11 +55,27 @@ jobs:
       - name: Build VSIX
         run: npx vsce package -o "tsqx-compiler-${RELEASE_TAG}.vsix"
 
+      - name: Build DSH plugin
+        if: ${{ hashFiles('scripts/package-dsh.mjs') != '' }}
+        run: npm run package:dsh
+
+      - name: List release artifacts
+        id: artifacts
+        run: |
+          {
+            echo 'files<<EOF'
+            echo "tsqx-compiler-${RELEASE_TAG}.vsix"
+            if [ -f scripts/package-dsh.mjs ]; then
+              echo 'dist/dsh-tsqx-compiler-*.tgz'
+            fi
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
-          files: tsqx-compiler-${{ env.RELEASE_TAG }}.vsix
+          files: ${{ steps.artifacts.outputs.files }}
           generate_release_notes: true
           fail_on_unmatched_files: true
 

@@ -43,23 +43,37 @@ suite('Extension Test Suite', () => {
 		assert.strictEqual(config.get('pngDpi'), 144);
 	});
 
-	test('groups sidebar commands into collapsible sections', () => {
-		const provider = new TsqxSidebarProvider();
-		const groups = provider.getChildren();
-		assert.deepStrictEqual(
-			groups.map(group => group.label),
-			['Create & Compile', 'Preview & Export', 'Tools & Settings']
-		);
+	test('exposes separate sidebar views and keeps commands in their panels', () => {
+		const extension = vscode.extensions.getExtension('LYDT.tsqx-compiler');
+		const views = extension?.packageJSON.contributes.views['tsqx-explorer'];
+		assert.deepStrictEqual(views.map((view: { name: string }) => view.name),
+			['Build', 'Preview & Export', 'Snippets', 'Tools & Settings']);
 
-		for (const group of groups) {
-			assert.strictEqual(group.kind, 'group');
-			if (group.kind === 'group') {
-				assert.ok(provider.getChildren(group).length > 0);
-				assert.notStrictEqual(
-					provider.getTreeItem(group).collapsibleState,
-					vscode.TreeItemCollapsibleState.None
-				);
+		for (const [view, expected] of [
+			['tsqx-commands', 'tsqx.compile'],
+			['tsqx-preview-export', 'tsqx.preview'],
+			['tsqx-tools', 'tsqx.showOutput'],
+		] as const) {
+			const provider = new TsqxSidebarProvider(view);
+			try {
+				assert.ok(provider.getChildren().some(item => item.command?.command === expected));
+			} finally {
+				provider.dispose();
 			}
+		}
+	});
+
+	test('inserts a sidebar snippet with editable and linked placeholders', async () => {
+		const document = await vscode.workspace.openTextDocument({ language: 'tsqx' });
+		await vscode.window.showTextDocument(document);
+		try {
+			await vscode.commands.executeCommand('tsqx.insertSnippet', 'tsqx-regular');
+			assert.ok(document.getText().startsWith('~regular A B C D E'));
+			assert.strictEqual(document.getText(vscode.window.activeTextEditor?.selection), 'A');
+			await vscode.commands.executeCommand('type', { text: 'P' });
+			assert.match(document.getText(), /~regular P B C D E\s+P--B/);
+		} finally {
+			await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
 		}
 	});
 

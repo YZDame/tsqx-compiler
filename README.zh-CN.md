@@ -125,17 +125,20 @@ npm run smoke:compile -- /Users/leyudame/Documents/tsqx/examples/figures/fig1.ts
 
 ## 活动栏
 
-扩展在活动栏（左侧边栏）中添加了一个 **TSQX** 面板。命令按**创建与编译**、**预览与导出**、**工具与设置**分组，每组都可以折叠或展开：
+从活动栏打开 **TSQX**。四个面板可以分别展开或收起。
 
-- **编译当前文件** — 运行 tsqx → asy → pdf 流水线
-- **从模板新建图形** — 选择保存位置并创建常见 TSQX 作图文件
-- **编译工作区** — 带进度和取消功能地依次编译全部 TSQX 源码
-- **实时预览** — 打开或刷新持久 SVG 预览面板
-- **打开生成的 PDF** — 在 VS Code 查看器中检查正式 PDF
-- **导出为 SVG / PNG** — 将当前图形保存为其他格式
-- **清理生成产物** — 确认后删除所选源码生成的 ASY 和 PDF
-- **切换自动编译** — 开启/关闭保存时自动编译
-- **设置文件为 TSQX** — 将 `.txt` 文件标记为 TSQX
+| 面板 | 内容 |
+| --- | --- |
+| **Build（编译）** | 从模板新建图形，编译当前文件或整个工作区 |
+| **Preview & Export（预览与导出）** | 打开实时预览、PDF 或 ASY，导出 SVG 或 PNG |
+| **Snippets（片段）** | 浏览起始图形、点与交点、三角形的中心与圆、绘图样式 |
+| **Tools & Settings（工具与设置）** | 切换自动编译、清理产物、看编译日志、诊断工具链、运行初次配置、设置文件语言 |
+
+编辑 TSQX 文件时，可以输入 `tsqx-` 查看补全，也可以运行 **TSQX: Insert Snippet** 按名称、前缀或说明搜索。在侧栏点选片段也能直接插入。按 **Tab** 在占位符之间跳转。例如，`tsqx-incircle` 绘制三角形的内切圆，`tsqx-path-intersections` 定义两条路径的两个交点。
+
+## DeepSeek Harness
+
+从 [GitHub Releases](https://github.com/YZDame/tsqx-compiler/releases/latest) 获取 `dsh-tsqx-compiler-*.tgz`。在 DeepSeek Harness 的 **Add plugin** 中粘贴安装包 URL，也可以下载后运行 `dsh plugin --profile tui add ./dsh-tsqx-compiler-0.1.0.tgz`。插件提供 `tsqx_snippets` 工具，可查询与 VS Code 共用的片段和模板，还能通过会话的终端工具把图形编译成 ASY 和 PDF。依赖见 [DSH 插件说明](plugins/dsh-tsqx-compiler/README.md)。
 
 ## 开发
 

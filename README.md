@@ -125,17 +125,20 @@ Release workflow details are documented in [docs/RELEASE.md](./docs/RELEASE.md).
 
 ## Activity Bar
 
-The extension adds a **TSQX** panel to the Activity Bar (left sidebar). Commands are arranged in collapsible **Create & Compile**, **Preview & Export**, and **Tools & Settings** groups:
+Open **TSQX** in the Activity Bar. Its four panels can be expanded or collapsed independently.
 
-- **Compile Current File** — run the tsqx → asy → pdf pipeline
-- **New Figure from Template** — choose a save location and create a common TSQX construction
-- **Compile Workspace** — compile all TSQX sources sequentially with progress and cancellation
-- **Live Preview** — open or refresh the persistent SVG preview panel
-- **Open Generated PDF** — inspect the formal PDF in VS Code's viewer
-- **Export as SVG / PNG** — save the current figure in another format
-- **Clean Generated Artifacts** — remove the selected source's generated ASY and PDF after confirmation
-- **Toggle Auto-Compile** — switch auto-compile on save on/off
-- **Set File as TSQX** — mark a `.txt` file for TSQX support
+| Panel | What it contains |
+| --- | --- |
+| **Build** | Create a figure from a template and compile the current file or workspace |
+| **Preview & Export** | Open Live Preview, PDF, or ASY and export SVG or PNG |
+| **Snippets** | Browse starting shapes, points and intersections, triangle centers and circles, and drawing styles |
+| **Tools & Settings** | Toggle auto-compile, clean outputs, view logs, diagnose the toolchain, run setup, and set the file language |
+
+In a TSQX editor, type `tsqx-` to see suggestions, or run **TSQX: Insert Snippet** to search by name, prefix, or description. You can also select a snippet in the sidebar to insert it. Press **Tab** to move through its placeholders. For example, `tsqx-incircle` draws a triangle's incircle and `tsqx-path-intersections` defines both intersection points of two paths.
+
+## DeepSeek Harness
+
+Install the `dsh-tsqx-compiler-*.tgz` asset from [GitHub Releases](https://github.com/YZDame/tsqx-compiler/releases/latest) using **Add plugin** in DeepSeek Harness. You can paste the tarball URL or use a downloaded copy with `dsh plugin --profile tui add ./dsh-tsqx-compiler-0.1.0.tgz`. The plugin provides the `tsqx_snippets` tool and a skill that can compile figures to ASY and PDF through the session shell. See the [DSH plugin guide](plugins/dsh-tsqx-compiler/README.md) for requirements.
 
 ## Development
 

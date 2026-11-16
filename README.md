@@ -26,6 +26,12 @@ Compile [TSQX](https://github.com/vEnhance/tsqx) geometry files to high-quality 
 - **Language Assistance** — Built-in and point completion, hover documentation, document outline, and go-to-definition.
 - **SVG and PNG Export** — Convert the generated PDF through Poppler with configurable PNG resolution.
 
+## TSQX Ecosystem
+
+- **Chinese handbook and examples:** [tsqx-book](https://github.com/YZDame/tsqx-book) ([syntax reference](https://github.com/YZDame/tsqx-book/blob/main/docs/syntax-reference.md))
+- **AI-assisted figure generation:** [tsqx-gen-skill](https://github.com/YZDame/tsqx-gen-skill)
+- **Language implementation:** [vEnhance/tsqx](https://github.com/vEnhance/tsqx) (upstream)
+
 ## Quick Start
 
 1. Open a `.tsqx` file
@@ -36,7 +42,7 @@ Compile [TSQX](https://github.com/vEnhance/tsqx) geometry files to high-quality 
 
 | Tool | Install |
 |------|---------|
-| **tsqx** | `pip install tsqx` or `pip install -e .` from this repo |
+| **tsqx** | `pip install tsqx` (upstream package); for editable installation clone [vEnhance/tsqx](https://github.com/vEnhance/tsqx), then run `pip install -e .` **there** |
 | **Asymptote** | `brew install asymptote` (macOS) / `apt install asymptote` (Linux) / [Windows installer](https://asymptote.sourceforge.io/) |
 | **Poppler** | `brew install poppler` (macOS) / `apt install poppler-utils` (Linux); required for persistent preview and SVG/PNG export |
 | **VS Code** | ≥ 1.109.0 |
@@ -86,7 +92,15 @@ When the first TSQX editor opens, the extension offers to run setup. It checks t
 
 ## Language Assistance
 
+Builtin function completion and hover help include a link to the [TSQX syntax reference](https://github.com/YZDame/tsqx-book/blob/main/docs/syntax-reference.md) for further reading.
+
 Completion includes documented TSQX geometry functions, points already defined in the current document, colors, and pen styles. Hover shows function signatures or the nearest preceding point definition. The Outline view lists point definitions, and **Go to Definition** follows point references in the current file. Static snippets are available with prefixes such as `tsqx-triangle`, `tsqx-point`, `tsqx-foot`, `tsqx-fill`, and `tsqx-asy`.
+
+## Diagnostics and Failed Previews
+
+When Asymptote reports an error, the Problems panel records its exact location in the **generated `.asy`** file and also shows a summary at the start of the original `.tsqx` file, with related information linking to the generated location. This is **not** an exact ASY-to-TSQX line source map. Open **TSQX: Open Generated ASY** to inspect it.
+
+If compilation fails while a live preview is open, the extension keeps the last successful drawing visible and displays a warning that it is **not the latest source output**. A successful recompilation refreshes the drawing and clears the warning.
 
 ## Preview and Export
 

@@ -63,3 +63,36 @@ jobs:
 
       - name: Run extension tests
         run: xvfb-run -a npm run test:extension
+
+  toolchain-smoke:
+    name: Real TSQX → Asymptote → PDF smoke test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install the upstream TSQX toolchain
+        run: |
+          python -m pip install tsqx
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends asymptote texlive-latex-base texlive-latex-recommended
+
+      - name: Compile extension
+        run: |
+          npm ci
+          npm run compile
+
+      - name: Compile built-in templates to real PDFs
+        run: npm run smoke:templates

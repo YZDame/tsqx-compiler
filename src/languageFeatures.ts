@@ -8,6 +8,7 @@ import {
 } from './languageModel';
 
 const WORD_PATTERN = /[A-Za-z][A-Za-z0-9_']*/;
+const HANDBOOK_URL = 'https://github.com/YZDame/tsqx-book/blob/main/docs/syntax-reference.md';
 
 export function registerLanguageFeatures(context: vscode.ExtensionContext): void {
   const selector: vscode.DocumentSelector = { language: 'tsqx', scheme: '*' };
@@ -24,7 +25,9 @@ class TsqxCompletionProvider implements vscode.CompletionItemProvider {
     const items = TSQX_BUILTINS.map(item => {
       const completion = new vscode.CompletionItem(item.name, vscode.CompletionItemKind.Function);
       completion.detail = item.signature;
-      completion.documentation = new vscode.MarkdownString(item.description);
+      completion.documentation = new vscode.MarkdownString(
+        `${item.description}\n\n[TSQX syntax reference](${HANDBOOK_URL})`
+      );
       completion.insertText = new vscode.SnippetString(item.snippet);
       return completion;
     });
@@ -58,7 +61,7 @@ class TsqxHoverProvider implements vscode.HoverProvider {
     if (builtin) {
       const markdown = new vscode.MarkdownString();
       markdown.appendCodeblock(builtin.signature, 'tsqx');
-      markdown.appendMarkdown(`\n${builtin.description}`);
+      markdown.appendMarkdown(`\n${builtin.description}\n\n[TSQX syntax reference](${HANDBOOK_URL})`);
       return new vscode.Hover(markdown, range);
     }
     const definition = findDefinition(parseDefinitions(document.getText()), word, position.line);

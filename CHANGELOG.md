@@ -4,6 +4,15 @@ All notable changes to the TSQX Compiler extension will be documented in this fi
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-11-16
+
+### Fixed
+- Surface Asymptote failures in the source file and link to the precise location in the generated ASY.
+- Keep the previous drawing visible with a stale-preview warning when recompilation fails.
+
+### Changed
+- Link the TSQX handbook from completion and hover help.
+
 ## [0.5.0] - 2026-11-16
 
 ### Added

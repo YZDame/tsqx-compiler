@@ -1,12 +1,23 @@
 import * as vscode from 'vscode';
 import { CompilationResult } from './compiler';
+import { lintTsqxSource } from './languageModel';
+
+export function createSourceLintDiagnostics(sourceText: string): vscode.Diagnostic[] {
+  return lintTsqxSource(sourceText).map(warning => {
+    const range = new vscode.Range(warning.line, warning.start, warning.line, warning.end);
+    const diagnostic = new vscode.Diagnostic(range, warning.message, vscode.DiagnosticSeverity.Warning);
+    diagnostic.source = 'TSQX Compiler (lint)';
+    return diagnostic;
+  });
+}
 
 export function createDiagnosticEntries(
   tsqxFilePath: string,
-  result: CompilationResult
+  result: CompilationResult,
+  sourceText?: string
 ): Map<string, vscode.Diagnostic[]> {
   const entries = new Map<string, vscode.Diagnostic[]>();
-  entries.set(tsqxFilePath, []);
+  entries.set(tsqxFilePath, sourceText ? createSourceLintDiagnostics(sourceText) : []);
   entries.set(result.asyPath, []);
 
   for (const issue of result.issues) {

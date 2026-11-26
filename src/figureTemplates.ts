@@ -68,4 +68,60 @@ CP O A / dashed gray
 A--B--C--cycle / red
 `,
   },
+  {
+    label: 'Themed Euler line (ldgeo)',
+    description: 'Semantic theme tokens (classic/print/flexoki/colormath/slides) + invariant assertion',
+    filename: 'euler-line-themed.tsqx',
+    content: `# Themed Euler line (switch via tsqx.theme or .tsqxrc.json)
+A = dir 105
+B = dir 215
+C = dir 330
+O 15 = circumcenter A B C
+H 165 = orthocenter A B C
+G 290 = centroid A B C
+D 270 = foot H B C
+E 30 = foot H C A
+F 150 = foot H A B
+!check_perp(A, D, B, C, "AD perp BC");
+!check_collinear(O, G, H, "Euler line O-G-H");
+
+circumcircle A B C / circ
+A--B--C--cycle / fill1 / given
+D--E--F--cycle / fill2 / accent
+A--D / aux
+B--E / aux
+C--F / aux
+O--H / key
+rightanglemark A D C / mark
+`,
+  },
+  {
+    label: 'Symmedian & tangents (otherPt)',
+    description: 'Safe second circle-line intersection via otherPt + perpPt tangents',
+    filename: 'symmedian-tangents.tsqx',
+    content: `# Symmedian, tangents, and safe second intersection
+A = dir 112
+B = dir 210
+C = dir 330
+O 15 = circumcenter A B C
+M 235 = midpoint B--C
+!path w = circumcircle(A, B, C);
+T 270 = extension B (perpPt B O B) C (perpPt C O C)
+K 245 = otherPt w A T
+D 300 = otherPt w A M
+!check_perp(O, B, B, T, "OB perp BT");
+!check_on_circle(K, O, A, "K on circumcircle");
+
+w / circ
+A--B--C--cycle / fill1 / given
+O--B / aux2
+O--C / aux2
+B--T--C / accent
+A--T / key
+A--D / aux
+rightanglemark O B T / mark
+pathtick B M 1 / mark
+pathtick M C 1 / mark
+`,
+  },
 ] as const;

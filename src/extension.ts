@@ -11,7 +11,7 @@ import {
 	isOutputStale,
 	normalizeExtraArgs,
 } from './compiler';
-import { createDiagnosticEntries } from './diagnostics';
+import { createDiagnosticEntries, createSourceLintDiagnostics } from './diagnostics';
 import { CompileCoordinator } from './compileCoordinator';
 import { resolveOutputDirectory } from './outputDirectory';
 import { TsqxSidebarProvider } from './sidebarProvider';
@@ -20,6 +20,12 @@ import { registerLanguageFeatures } from './languageFeatures';
 import { openFigureTemplate } from './templates';
 import { convertPdf, ExportFormat } from './pdfConverter';
 import { PreviewManager } from './previewManager';
+import {
+	DEFAULT_LDGEO_PATH,
+	normalizeScaleSetting,
+	normalizeThemeSetting,
+	TsqxThemeSetting,
+} from './themes';
 
 const execFileAsync = promisify(execFile);
 
@@ -149,6 +155,18 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	context.subscriptions.push(
+		vscode.commands.registerCommand('tsqx.exportStandaloneAsy', async (uri?: vscode.Uri) => {
+			await exportStandaloneAsy(uri);
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tsqx.selectTheme', async () => {
+			await selectDiagramTheme(settingsView);
+		})
+	);
+
+	context.subscriptions.push(
 		vscode.commands.registerCommand('tsqx.diagnoseToolchain', async () => {
 			await diagnoseToolchain();
 		})
@@ -200,10 +218,27 @@ export function activate(context: vscode.ExtensionContext) {
 			const editor = vscode.window.activeTextEditor;
 			if (editor) {
 				await vscode.languages.setTextDocumentLanguage(editor.document, 'tsqx');
+				refreshSourceLint(editor.document);
 				vscode.window.showInformationMessage('File language set to TSQX');
 			}
 		})
 	);
+
+	// --- Live static lint for parser traps ---
+	const refreshSourceLint = (doc: vscode.TextDocument) => {
+		if (!isTsqxFile(doc)) { return; }
+		const existing = (diagnosticCollection.get(doc.uri) ?? []).filter(
+			d => d.source !== 'TSQX Compiler (lint)'
+		);
+		diagnosticCollection.set(doc.uri, [...createSourceLintDiagnostics(doc.getText()), ...existing]);
+	};
+	context.subscriptions.push(
+		vscode.workspace.onDidOpenTextDocument(refreshSourceLint),
+		vscode.workspace.onDidChangeTextDocument(event => refreshSourceLint(event.document))
+	);
+	for (const doc of vscode.workspace.textDocuments) {
+		refreshSourceLint(doc);
+	}
 
 	// --- Auto-compile on save ---
 	context.subscriptions.push(
@@ -313,25 +348,36 @@ async function performCompile(filePath: string, notifyUser: boolean): Promise<Co
 	const asyPath = config.get<string>('asyPath', 'asy');
 	const extraArgs = normalizeExtraArgs(config.get<unknown>('extraTsqxArgs', ['-p']));
 	const outputDirectory = getConfiguredOutputDirectory(filePath);
+	const theme = normalizeThemeSetting(config.get<string>('theme', 'auto'));
+	const scale = normalizeScaleSetting(config.get<string>('scale', 'default'));
+	const customLdgeo = config.get<string>('customLdgeoPath', '').trim();
+	const ldgeoPath = customLdgeo || DEFAULT_LDGEO_PATH;
+	const workspaceRoot = vscode.workspace.getWorkspaceFolder(fileUri)?.uri.fsPath;
 	let finalState: 'success' | 'error' = 'error';
 
 	try {
+		const sourceText = await fs.promises.readFile(filePath, 'utf8').catch(() => undefined);
 		const result = await compileTsqx(filePath, {
 			timeout,
 			tsqxPath,
 			asyPath,
 			extraArgs,
 			outputDirectory,
+			theme,
+			scale,
+			ldgeoPath,
+			workspaceRoot,
 		});
 
-		const diagnosticEntries = createDiagnosticEntries(filePath, result);
+		const diagnosticEntries = createDiagnosticEntries(filePath, result, sourceText);
 		for (const [targetPath, diagnostics] of diagnosticEntries) {
 			diagnosticCollection.set(vscode.Uri.file(targetPath), diagnostics);
 		}
 
 		if (result.success) {
 			finalState = 'success';
-			outputChannel.appendLine(`✓ Compiled successfully in ${result.durationMs}ms → ${result.pdfPath}`);
+			const themeTag = result.theme && result.theme !== 'none' ? ` [theme: ${result.theme}]` : '';
+			outputChannel.appendLine(`✓ Compiled successfully in ${result.durationMs}ms${themeTag} → ${result.pdfPath}`);
 		} else {
 			updateStatusBar('error');
 			// Keep the last successful diagram visible, but mark it as stale.
@@ -564,6 +610,99 @@ async function maybeOfferSetup(
 	}
 }
 
+async function selectDiagramTheme(settingsView: TsqxSidebarProvider): Promise<void> {
+	const uri = vscode.window.activeTextEditor?.document.uri;
+	const config = getConfig(uri);
+	const current = normalizeThemeSetting(config.get<string>('theme', 'auto'));
+	const choices: Array<vscode.QuickPickItem & { value: TsqxThemeSetting }> = [
+		{ label: 'auto', description: 'Detect .tsqxrc.json / project.yaml, or classic when semantic tokens appear', value: 'auto' },
+		{ label: 'classic', description: 'Default olympiad handout theme (charcoal, academic blue, crimson)', value: 'classic' },
+		{ label: 'print', description: 'Monochrome high-contrast exam theme (solid light grays, distinct dash styles)', value: 'print' },
+		{ label: 'flexoki', description: 'Warm ink-on-paper low-glare palette', value: 'flexoki' },
+		{ label: 'colormath', description: 'ColorMath LaTeX class palette (BNUBlue, Orange, SYUSGreen, THUPurple)', value: 'colormath' },
+		{ label: 'slides', description: 'Bold 16:9 classroom projection palette (+40% stroke & 11pt labels)', value: 'slides' },
+		{ label: 'none', description: 'Disable ldgeo.asy auto-import (vanilla upstream tsqx)', value: 'none' },
+	];
+	const picked = await vscode.window.showQuickPick(choices, {
+		title: `Select TSQX Diagram Theme (current: ${current})`,
+	});
+	if (!picked) {
+		return;
+	}
+	const target = vscode.workspace.workspaceFolders
+		? vscode.ConfigurationTarget.Workspace
+		: vscode.ConfigurationTarget.Global;
+	await config.update('theme', picked.value, target);
+	settingsView.refresh();
+	vscode.window.showInformationMessage(`TSQX diagram theme set to "${picked.value}".`);
+
+	const editor = vscode.window.activeTextEditor;
+	if (editor && isTsqxFile(editor.document)) {
+		const filePath = editor.document.uri.fsPath;
+		const result = await compileFile(filePath);
+		if (result?.success) {
+			await refreshOpenPreview(filePath, result.pdfPath);
+		}
+	}
+}
+
+async function exportStandaloneAsy(uri?: vscode.Uri): Promise<void> {
+	const filePath = resolveFilePath(uri);
+	if (!filePath) {
+		return;
+	}
+	const fileUri = vscode.Uri.file(filePath);
+	const config = getConfig(fileUri);
+	const defaultTarget = path.join(
+		path.dirname(filePath),
+		`${path.basename(filePath, path.extname(filePath))}.standalone.asy`
+	);
+	const destination = await vscode.window.showSaveDialog({
+		defaultUri: vscode.Uri.file(defaultTarget),
+		filters: { 'Asymptote source': ['asy'] },
+		title: 'Export standalone Asymptote file (with theme inlined)',
+	});
+	if (!destination) {
+		return;
+	}
+
+	const timeout = config.get<number>('compilationTimeout', 30);
+	const tsqxPath = config.get<string>('tsqxPath', 'tsqx');
+	const asyPath = config.get<string>('asyPath', 'asy');
+	const extraArgs = normalizeExtraArgs(config.get<unknown>('extraTsqxArgs', ['-p']));
+	const theme = normalizeThemeSetting(config.get<string>('theme', 'auto'));
+	const scale = normalizeScaleSetting(config.get<string>('scale', 'default'));
+	const customLdgeo = config.get<string>('customLdgeoPath', '').trim();
+	const ldgeoPath = customLdgeo || DEFAULT_LDGEO_PATH;
+	const workspaceRoot = vscode.workspace.getWorkspaceFolder(fileUri)?.uri.fsPath;
+
+	const tempOutputDir = await fs.promises.mkdtemp(path.join(path.dirname(destination.fsPath), '.tsqx-standalone-'));
+	try {
+		const result = await compileTsqx(filePath, {
+			timeout,
+			tsqxPath,
+			asyPath,
+			extraArgs,
+			outputDirectory: tempOutputDir,
+			theme,
+			scale,
+			ldgeoPath,
+			workspaceRoot,
+			standalone: true,
+		});
+		if (!result.success || !fs.existsSync(result.asyPath)) {
+			vscode.window.showErrorMessage(`Standalone ASY export failed: ${result.errors[0] || 'unknown error'}`);
+			return;
+		}
+		await fs.promises.copyFile(result.asyPath, destination.fsPath);
+		const doc = await vscode.workspace.openTextDocument(destination);
+		await vscode.window.showTextDocument(doc, { preview: true, viewColumn: vscode.ViewColumn.Beside });
+		vscode.window.showInformationMessage(`Exported standalone ASY (theme: ${result.theme ?? 'none'}) → ${destination.fsPath}`);
+	} finally {
+		await fs.promises.rm(tempOutputDir, { recursive: true, force: true });
+	}
+}
+
 async function diagnoseToolchain(): Promise<void> {
 	const config = getConfig();
 	const tsqxPath = config.get<string>('tsqxPath', 'tsqx');
@@ -574,6 +713,10 @@ async function diagnoseToolchain(): Promise<void> {
 	const autoCompileOnSave = config.get<boolean>('autoCompileOnSave', true);
 	const autoCompileDelay = getAutoCompileDelay();
 	const outputDirectory = config.get<string>('outputDirectory', '');
+	const theme = normalizeThemeSetting(config.get<string>('theme', 'auto'));
+	const scale = normalizeScaleSetting(config.get<string>('scale', 'default'));
+	const customLdgeo = config.get<string>('customLdgeoPath', '').trim();
+	const ldgeoPath = customLdgeo || DEFAULT_LDGEO_PATH;
 	const workspaceFolders = vscode.workspace.workspaceFolders?.map(folder => folder.uri.fsPath) ?? [];
 
 	outputChannel.clear();
@@ -585,6 +728,9 @@ async function diagnoseToolchain(): Promise<void> {
 	outputChannel.appendLine(`- asyPath: ${asyPath}`);
 	outputChannel.appendLine(`- pdfConverterPath: ${pdfConverterPath}`);
 	outputChannel.appendLine(`- extraTsqxArgs: ${JSON.stringify(extraArgs)}`);
+	outputChannel.appendLine(`- theme: ${theme}`);
+	outputChannel.appendLine(`- scale: ${scale}`);
+	outputChannel.appendLine(`- ldgeo.asy: ${ldgeoPath} (${fs.existsSync(ldgeoPath) ? 'found' : 'missing'})`);
 	outputChannel.appendLine(`- compilationTimeout: ${timeout}s`);
 	outputChannel.appendLine(`- autoCompileOnSave: ${autoCompileOnSave}`);
 	outputChannel.appendLine(`- autoCompileDelay: ${autoCompileDelay}ms`);

@@ -57,6 +57,8 @@ Compile [TSQX](https://github.com/vEnhance/tsqx) geometry files to high-quality 
 | TSQX: Export Figure as PNG | — | Export a raster PNG at the configured DPI |
 | TSQX: Compile TSQX File | `Cmd+Shift+B` / `Ctrl+Shift+B` | Compile to ASY and PDF |
 | TSQX: Open Generated ASY | — | Open the generated `.asy` file beside the editor |
+| TSQX: Export Standalone ASY (Inline Theme) | — | Inline `ldgeo.asy` and the active theme into a self-contained `.asy` file for sharing |
+| TSQX: Select Diagram Theme | — | Switch between `auto`, `classic`, `print`, `flexoki`, `colormath`, `slides`, and `none` |
 | TSQX: Diagnose Toolchain | — | Check `tsqx` / `asy` commands, versions, and current extension settings |
 | TSQX: Show Compiler Output | — | Open detailed compiler logs |
 | TSQX: Run First-Use Setup | — | Check tools and configure output and auto-compile behavior |
@@ -78,11 +80,16 @@ Compile [TSQX](https://github.com/vEnhance/tsqx) geometry files to high-quality 
   "tsqx.pdfConverterPath": "pdftocairo", // Poppler converter used by preview/export
   "tsqx.pngDpi": 144,                // PNG export resolution (72–600 DPI)
   "tsqx.outputDirectory": "",       // empty: beside source; e.g. ".tsqx-build"
-  "tsqx.extraTsqxArgs": ["-p"]      // extra CLI args; each argument is a separate array item
+  "tsqx.extraTsqxArgs": ["-p"],     // extra CLI args; each argument is a separate array item
+  "tsqx.theme": "auto",             // semantic theme: auto / classic / print / flexoki / colormath / slides / none
+  "tsqx.scale": "default",          // physical width preset: default / compact (5.5cm) / standard (7.5cm) / wide (11.5cm)
+  "tsqx.customLdgeoPath": ""        // optional path to a custom ldgeo.asy (empty uses bundled library)
 }
 ```
 
 For example, use `["-p", "-s", "200"]` to pass a size. Legacy string values remain supported. Commands are executed directly without a shell.
+
+With `"tsqx.theme": "auto"`, the extension first checks ancestor `.tsqxrc.json` (`theme`) and `project.yaml` (`tsqx_theme`) files; otherwise it activates `classic` automatically whenever semantic tokens (`given`, `aux`, `key`, `fill1`, ...) or `ldgeo.asy` helpers (`otherPt`, `check_perp`, ...) appear in the `.tsqx` source (keeping `.tsqx` files zero-boilerplate).
 
 Relative output directories are resolved from the workspace root. The source folder structure is retained below that directory, so `chapter1/figures/a.tsqx` becomes `.tsqx-build/chapter1/figures/a.pdf`. Absolute paths and the `${workspaceFolder}` / `${fileDirname}` variables are also supported.
 
@@ -92,9 +99,9 @@ When the first TSQX editor opens, the extension offers to run setup. It checks t
 
 ## Language Assistance
 
-Builtin function completion and hover help include a link to the [TSQX syntax reference](https://github.com/YZDame/tsqx-book/blob/main/docs/syntax-reference.md) for further reading.
+Builtin function completion and hover help include links to the [TSQX syntax reference](https://github.com/YZDame/tsqx-book/blob/main/docs/syntax-reference.md) and [theme guide](https://github.com/YZDame/tsqx-book/blob/main/docs/theme-guide.md).
 
-Completion includes documented TSQX geometry functions, points already defined in the current document, colors, and pen styles. Hover shows function signatures or the nearest preceding point definition. The Outline view lists point definitions, and **Go to Definition** follows point references in the current file. Static snippets are available with prefixes such as `tsqx-triangle`, `tsqx-point`, `tsqx-foot`, `tsqx-fill`, and `tsqx-asy`.
+Completion includes documented TSQX and `ldgeo.asy` geometry functions, points already defined in the current document, semantic theme tokens (`given`, `aux`, `key`, `circ`, `fill1`, ...), colors, and pen styles. Hover shows function signatures, semantic role descriptions, or the nearest preceding point definition. The editor also reports live lint warnings for common TSQX parser traps (missing `/` before stroke styles, parenthesized pen calls after `/`, spaced infix minus, and parenthesized expressions joined directly with `--`).
 
 ## Diagnostics and Failed Previews
 

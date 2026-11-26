@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { findBuiltin, findDefinition, parseDefinitions } from '../languageModel';
+import { findBuiltin, findDefinition, findSemanticToken, lintTsqxSource, parseDefinitions } from '../languageModel';
 import { FIGURE_TEMPLATES } from '../figureTemplates';
 
 test('parses point definitions with directions and label flags', () => {
@@ -26,15 +26,37 @@ test('parses special triangle and regular polygon definitions', () => {
   assert.equal(definitions[3].generatedBy, 'regular');
 });
 
-test('provides documented TSQX builtins', () => {
+test('provides documented TSQX and ldgeo builtins plus semantic tokens', () => {
   assert.equal(findBuiltin('foot')?.signature, 'foot P A B');
+  assert.equal(findBuiltin('otherPt')?.signature, 'otherPt circle A B');
+  assert.equal(findBuiltin('excenter')?.signature, 'excenter A B C');
   assert.equal(findBuiltin('unknown'), undefined);
+  assert.equal(findSemanticToken('given')?.role, 'Known skeleton');
+  assert.equal(findSemanticToken('nonexistent'), undefined);
 });
 
 test('finds the nearest preceding redefinition', () => {
   const definitions = parseDefinitions('P = dir 0\nA = dir 90\nP = midpoint P--A\nP--A');
   assert.equal(findDefinition(definitions, 'P', 1)?.line, 0);
   assert.equal(findDefinition(definitions, 'P', 3)?.line, 2);
+});
+
+test('lintTsqxSource flags all four common TSQX parser traps', () => {
+  const warnings = lintTsqxSource([
+    '~triangle A B C',
+    'A--B / gray(0.5)',
+    'A--B dashed blue',
+    'P = 2*A - B',
+    '(foot A B C)--(foot B C A)',
+    'A--B / aux',
+    '!draw(A--B, gray(0.5));',
+  ].join('\n'));
+
+  assert.deepEqual(warnings.map(w => w.line), [1, 2, 3, 4]);
+  assert.match(warnings[0].message, /parentheses after '\/'/i);
+  assert.match(warnings[1].message, /Missing '\/'/);
+  assert.match(warnings[2].message, /Spaced minus/);
+  assert.match(warnings[3].message, /parenthesized expressions/i);
 });
 
 test('all figure templates expose point definitions', () => {

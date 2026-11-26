@@ -2,13 +2,16 @@ import * as vscode from 'vscode';
 import {
   findBuiltin,
   findDefinition,
+  findSemanticToken,
   parseDefinitions,
   TSQX_BUILTINS,
   TSQX_COLORS,
+  TSQX_SEMANTIC_TOKENS,
 } from './languageModel';
 
 const WORD_PATTERN = /[A-Za-z][A-Za-z0-9_']*/;
 const HANDBOOK_URL = 'https://github.com/YZDame/tsqx-book/blob/main/docs/syntax-reference.md';
+const THEME_GUIDE_URL = 'https://github.com/YZDame/tsqx-book/blob/main/docs/theme-guide.md';
 
 export function registerLanguageFeatures(context: vscode.ExtensionContext): void {
   const selector: vscode.DocumentSelector = { language: 'tsqx', scheme: '*' };
@@ -41,6 +44,14 @@ class TsqxCompletionProvider implements vscode.CompletionItemProvider {
       completion.detail = definition.expression;
       items.push(completion);
     }
+    for (const token of TSQX_SEMANTIC_TOKENS) {
+      const completion = new vscode.CompletionItem(token.name, vscode.CompletionItemKind.Color);
+      completion.detail = `[ldgeo theme] ${token.role}`;
+      completion.documentation = new vscode.MarkdownString(
+        `${token.description}\n\n[TSQX theme guide](${THEME_GUIDE_URL})`
+      );
+      items.push(completion);
+    }
     for (const color of TSQX_COLORS) {
       const completion = new vscode.CompletionItem(color, vscode.CompletionItemKind.Color);
       completion.detail = 'TSQX / Asymptote pen';
@@ -62,6 +73,13 @@ class TsqxHoverProvider implements vscode.HoverProvider {
       const markdown = new vscode.MarkdownString();
       markdown.appendCodeblock(builtin.signature, 'tsqx');
       markdown.appendMarkdown(`\n${builtin.description}\n\n[TSQX syntax reference](${HANDBOOK_URL})`);
+      return new vscode.Hover(markdown, range);
+    }
+    const semanticToken = findSemanticToken(word);
+    if (semanticToken) {
+      const markdown = new vscode.MarkdownString();
+      markdown.appendCodeblock(semanticToken.name, 'tsqx');
+      markdown.appendMarkdown(`\n**${semanticToken.role}** — ${semanticToken.description}\n\n[TSQX theme guide](${THEME_GUIDE_URL})`);
       return new vscode.Hover(markdown, range);
     }
     const definition = findDefinition(parseDefinitions(document.getText()), word, position.line);

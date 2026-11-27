@@ -14,8 +14,10 @@ const commandRows = {
 		['Export as SVG', 'tsqx.exportSvg', 'file-media'],
 		['Export as PNG', 'tsqx.exportPng', 'file-media'],
 		['Open Generated ASY', 'tsqx.openGeneratedAsy', 'code'],
+		['Export Standalone ASY', 'tsqx.exportStandaloneAsy', 'export'],
 	],
 	'tsqx-tools': [
+		['Select Diagram Theme', 'tsqx.selectTheme', 'symbol-color'],
 		['Toggle Auto-Compile', 'tsqx.toggleAutoCompile', 'eye'],
 		['Clean Generated Artifacts', 'tsqx.cleanArtifacts', 'trash'],
 		['Show Compiler Output', 'tsqx.showOutput', 'output'],
@@ -58,6 +60,10 @@ export class TsqxSidebarProvider implements vscode.TreeDataProvider<vscode.TreeI
 				const autoCompile = vscode.workspace.getConfiguration('tsqx', uri).get('autoCompileOnSave', true);
 				item.description = autoCompile ? 'ON' : 'OFF';
 				item.iconPath = new vscode.ThemeIcon(autoCompile ? 'eye' : 'eye-closed');
+			} else if (command === 'tsqx.selectTheme') {
+				const uri = vscode.window.activeTextEditor?.document.uri;
+				const theme = vscode.workspace.getConfiguration('tsqx', uri).get<string>('theme', 'auto');
+				item.description = theme;
 			}
 			return item;
 		});

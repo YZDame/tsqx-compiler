@@ -57,6 +57,8 @@
 | TSQX: 导出图形为 PNG | — | 按设置的 DPI 导出位图 PNG |
 | TSQX: 编译 TSQX 文件 | `Cmd+Shift+B` / `Ctrl+Shift+B` | 编译为 ASY 和 PDF |
 | TSQX: 打开生成的 ASY | — | 在编辑器旁边打开生成的 `.asy` 文件 |
+| TSQX: 导出独立 ASY（内联主题） | — | 将 `ldgeo.asy` 与当前主题内联到单个 `.asy` 文件以便对外分享 |
+| TSQX: 选择图形主题 | — | 在 `auto` / `classic` / `print` / `flexoki` / `colormath` / `slides` / `none` 间切换并自动重编 |
 | TSQX: 诊断工具链 | — | 检查 `tsqx` / `asy` 命令、版本和当前扩展设置 |
 | TSQX: 显示编译器输出 | — | 打开详细编译日志 |
 | TSQX: 运行首次使用设置 | — | 检查工具并设置输出位置和自动编译行为 |
@@ -78,11 +80,16 @@
   "tsqx.pdfConverterPath": "pdftocairo", // 预览/导出使用的 Poppler 转换器
   "tsqx.pngDpi": 144,                // PNG 导出分辨率（72–600 DPI）
   "tsqx.outputDirectory": "",       // 空值：源码旁；例如 ".tsqx-build"
-  "tsqx.extraTsqxArgs": ["-p"]      // 额外的 CLI 参数；每个参数单独占一个数组元素
+  "tsqx.extraTsqxArgs": ["-p"],     // 额外的 CLI 参数；每个参数单独占一个数组元素
+  "tsqx.theme": "auto",             // 语义样式主题：auto / classic / print / flexoki / colormath / slides / none
+  "tsqx.scale": "default",          // 物理画幅预设：default / compact (5.5cm) / standard (7.5cm) / wide (11.5cm)
+  "tsqx.customLdgeoPath": ""        // 可选自定义 ldgeo.asy 路径；留空使用插件内置版本
 }
 ```
 
 例如，使用 `["-p", "-s", "200"]` 传入尺寸参数。旧版字符串配置仍然兼容。扩展会直接启动命令，不经过 shell。
+
+当 `tsqx.theme` 为 `auto` 时，扩展会先向上查找目录中的 `.tsqxrc.json`（`"theme"` 字段）或 `project.yaml`（`tsqx_theme:` 字段）；未配置时，若检测到源码使用了 `given`/`aux`/`key`/`fill1` 等语义令牌或 `otherPt`/`check_perp` 等 `ldgeo` 函数，则自动以 `classic` 主题编译期注入（`.tsqx` 源码保持零样板）。
 
 相对输出目录以工作区根目录为基准，并保留源码的子目录结构。例如 `chapter1/figures/a.tsqx` 会输出为 `.tsqx-build/chapter1/figures/a.pdf`。同时支持绝对路径以及 `${workspaceFolder}`、`${fileDirname}` 变量。
 
@@ -92,9 +99,9 @@
 
 ## 语言辅助
 
-函数代码补全和 Hover 的帮助信息现在包含 [TSQX 中文语法参考](https://github.com/YZDame/tsqx-book/blob/main/docs/syntax-reference.md) 的入口。
+函数代码补全和 Hover 的帮助信息包含 [TSQX 中文语法参考](https://github.com/YZDame/tsqx-book/blob/main/docs/syntax-reference.md) 与 [语义化主题指南](https://github.com/YZDame/tsqx-book/blob/main/docs/theme-guide.md) 的入口。
 
-补全内容包括有文档依据的 TSQX 几何函数、当前文档已定义的点、颜色和画笔样式。悬停会显示函数签名或最近一次点定义；“大纲”视图列出点定义；“转到定义”可跟踪当前文件中的点引用。静态代码片段前缀包括 `tsqx-triangle`、`tsqx-point`、`tsqx-foot`、`tsqx-fill` 和 `tsqx-asy`。
+补全内容包括有文档依据的 TSQX 与 `ldgeo.asy` 几何函数、当前文档已定义的点、语义令牌（`given`、`aux`、`key`、`circ`、`fill1` 等）以及颜色与画笔样式。悬停会显示函数签名、语义角色说明或最近一次点定义；“大纲”视图列出点定义；“转到定义”可跟踪当前文件中的点引用。编辑器还会对 4 类常见 TSQX 解析器词法陷阱（漏写 `/`、`/` 后带括号笔刷、减号带空格、括号表达式直接 `--` 相连）给出实时诊断警告。
 
 ## 错误诊断与旧版预览
 

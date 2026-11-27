@@ -14,6 +14,7 @@
     "index.mjs",
     "compile.mjs",
     "cordis.patch.yml",
+    "assets/",
     "lib/",
     "snippets/",
     "SKILL.md"

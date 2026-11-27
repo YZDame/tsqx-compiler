@@ -131,6 +131,18 @@
         "category": "TSQX"
       },
       {
+        "command": "tsqx.exportStandaloneAsy",
+        "title": "Export Standalone ASY (Inline Theme)",
+        "icon": "$(export)",
+        "category": "TSQX"
+      },
+      {
+        "command": "tsqx.selectTheme",
+        "title": "Select Diagram Theme",
+        "icon": "$(symbol-color)",
+        "category": "TSQX"
+      },
+      {
         "command": "tsqx.diagnoseToolchain",
         "title": "Diagnose Toolchain",
         "icon": "$(tools)",
@@ -384,6 +396,36 @@
             "-p"
           ],
           "markdownDescription": "Extra arguments passed directly to the tsqx CLI. Prefer an array such as `[\"-p\", \"-s\", \"200\"]`. String values remain supported for compatibility."
+        },
+        "tsqx.theme": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "none",
+            "classic",
+            "print",
+            "flexoki",
+            "colormath",
+            "slides"
+          ],
+          "default": "auto",
+          "markdownDescription": "CSS-like semantic diagram theme injected via `ldgeo.asy` (`auto` checks `.tsqxrc.json` / `project.yaml`, then enables `classic` when semantic tokens or `ldgeo` helpers appear)."
+        },
+        "tsqx.scale": {
+          "type": "string",
+          "enum": [
+            "default",
+            "compact",
+            "standard",
+            "wide"
+          ],
+          "default": "default",
+          "markdownDescription": "Physical canvas width preset for 1:1 LaTeX embedding (`compact` = 5.5cm, `standard` = 7.5cm, `wide` = 11.5cm). Ignored if `extraTsqxArgs` already specifies `-s`."
+        },
+        "tsqx.customLdgeoPath": {
+          "type": "string",
+          "default": "",
+          "description": "Optional path to a custom ldgeo.asy theme/helper file. Empty uses the bundled ldgeo.asy."
         }
       }
     }

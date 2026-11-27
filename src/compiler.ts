@@ -1,6 +1,16 @@
 import { spawn } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
+import {
+  DEFAULT_LDGEO_PATH,
+  inlineLdgeoIntoAsy,
+  normalizeScaleSetting,
+  resolveEffectiveTheme,
+  TSQX_SCALE_SIZES,
+  TsqxScaleSetting,
+  TsqxThemePreset,
+  TsqxThemeSetting,
+} from './themes';
 
 export type CompilationStage = 'tsqx' | 'asy' | 'extension';
 
@@ -21,6 +31,7 @@ export interface CompilationResult {
   warnings: string[];
   issues: CompilationIssue[];
   durationMs: number;
+  theme?: TsqxThemePreset;
 }
 
 export interface CompileOptions {
@@ -29,6 +40,11 @@ export interface CompileOptions {
   asyPath: string;
   extraArgs: readonly string[];
   outputDirectory?: string;
+  theme?: TsqxThemeSetting;
+  scale?: TsqxScaleSetting;
+  ldgeoPath?: string;
+  workspaceRoot?: string;
+  standalone?: boolean;
 }
 
 export interface OutputPaths {
@@ -48,6 +64,10 @@ interface ProcessFailure extends Error {
   timedOut?: boolean;
 }
 
+function hasExplicitSizeArg(args: readonly string[]): boolean {
+  return args.some(arg => arg === '-s' || arg === '--size' || arg.startsWith('--size='));
+}
+
 export async function compileTsqx(
   tsqxFilePath: string,
   options: CompileOptions
@@ -65,30 +85,63 @@ export async function compileTsqx(
   const tempPdfBase = path.join(tempDir, basename);
   const tempPdfPath = `${tempPdfBase}.pdf`;
 
+  let effectiveTheme: TsqxThemePreset = 'none';
   try {
     let tsqxResult: ProcessResult;
+    const ldgeoPath = options.ldgeoPath || DEFAULT_LDGEO_PATH;
     try {
       const source = await fs.promises.readFile(tsqxFilePath, 'utf8');
+      effectiveTheme = resolveEffectiveTheme(options.theme, source, tsqxFilePath, options.workspaceRoot);
+
+      const tsqxArgs = [...options.extraArgs];
+      const scale = normalizeScaleSetting(options.scale);
+      if (scale !== 'default' && !hasExplicitSizeArg(tsqxArgs)) {
+        tsqxArgs.push('-s', TSQX_SCALE_SIZES[scale]);
+      }
+
       tsqxResult = await runProcess(
         options.tsqxPath,
-        [...options.extraArgs],
+        tsqxArgs,
         { cwd: dir, input: source, timeoutMs }
       );
-      await fs.promises.writeFile(tempAsyPath, tsqxResult.stdout, 'utf8');
+      let asySource = tsqxResult.stdout;
+      if (effectiveTheme !== 'none' && options.standalone) {
+        if (!fs.existsSync(ldgeoPath)) {
+          throw new Error(`Theme library not found: ${ldgeoPath}`);
+        }
+        asySource = inlineLdgeoIntoAsy(asySource, ldgeoPath, effectiveTheme);
+      }
+      await fs.promises.writeFile(tempAsyPath, asySource, 'utf8');
       await ensureNonEmptyFile(tempAsyPath, 'ASY');
       await replaceFile(tempAsyPath, asyFilePath);
       issues.push(...parseCompilerOutput('tsqx', tsqxResult.stderr, 'warning', tsqxFilePath));
     } catch (error) {
       const failure = normalizeFailure(error);
       issues.push(...issuesForFailure('tsqx', failure, tsqxFilePath));
-      return finishResult(false, asyFilePath, pdfPath, issues, startedAt);
+      return finishResult(false, asyFilePath, pdfPath, issues, startedAt, effectiveTheme);
     }
 
     try {
+      const asyArgs: string[] = [];
+      let asyEnv: NodeJS.ProcessEnv | undefined;
+      if (effectiveTheme !== 'none' && !options.standalone) {
+        if (!fs.existsSync(ldgeoPath)) {
+          throw new Error(`Theme library not found: ${ldgeoPath}`);
+        }
+        const ldgeoDir = path.dirname(ldgeoPath);
+        const existingDir = process.env.ASYMPTOTE_DIR;
+        asyEnv = {
+          ...process.env,
+          ASYMPTOTE_DIR: existingDir ? `${ldgeoDir}${path.delimiter}${existingDir}` : ldgeoDir,
+        };
+        asyArgs.push('-autoimport', path.basename(ldgeoPath, '.asy'), '-u', effectiveTheme);
+      }
+      asyArgs.push('-f', 'pdf', '-o', tempPdfBase, asyFilePath);
+
       const asyResult = await runProcess(
         options.asyPath,
-        ['-f', 'pdf', '-o', tempPdfBase, asyFilePath],
-        { cwd: dir, timeoutMs }
+        asyArgs,
+        { cwd: dir, timeoutMs, env: asyEnv }
       );
       await ensureNonEmptyFile(tempPdfPath, 'PDF');
       await replaceFile(tempPdfPath, pdfPath);
@@ -96,10 +149,10 @@ export async function compileTsqx(
     } catch (error) {
       const failure = normalizeFailure(error);
       issues.push(...issuesForFailure('asy', failure, asyFilePath));
-      return finishResult(false, asyFilePath, pdfPath, issues, startedAt);
+      return finishResult(false, asyFilePath, pdfPath, issues, startedAt, effectiveTheme);
     }
 
-    return finishResult(true, asyFilePath, pdfPath, issues, startedAt);
+    return finishResult(true, asyFilePath, pdfPath, issues, startedAt, effectiveTheme);
   } finally {
     await fs.promises.rm(tempDir, { recursive: true, force: true });
   }
@@ -187,11 +240,12 @@ export function splitCommandLine(value: string): string[] {
 export function runProcess(
   command: string,
   args: readonly string[],
-  options: { cwd: string; input?: string; timeoutMs: number }
+  options: { cwd: string; input?: string; timeoutMs: number; env?: NodeJS.ProcessEnv }
 ): Promise<ProcessResult> {
   return new Promise((resolve, reject) => {
     const child = spawn(command, [...args], {
       cwd: options.cwd,
+      env: options.env,
       shell: false,
       windowsHide: true,
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -328,7 +382,8 @@ function finishResult(
   asyPath: string,
   pdfPath: string,
   issues: CompilationIssue[],
-  startedAt: number
+  startedAt: number,
+  theme?: TsqxThemePreset
 ): CompilationResult {
   return {
     success,
@@ -338,5 +393,6 @@ function finishResult(
     errors: issues.filter(issue => issue.severity === 'error').map(issue => issue.message),
     warnings: issues.filter(issue => issue.severity === 'warning').map(issue => issue.message),
     durationMs: Date.now() - startedAt,
+    theme,
   };
 }

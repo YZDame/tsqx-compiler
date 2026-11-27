@@ -18,6 +18,9 @@ try {
 		tsqxPath: process.env.TSQX_PATH || 'tsqx',
 		asyPath: process.env.ASY_PATH || 'asy',
 		extraArgs: ['-p'],
+		theme: process.env.TSQX_THEME || 'auto',
+		scale: process.env.TSQX_SCALE || 'default',
+		standalone: process.env.TSQX_STANDALONE === '1',
 	});
 	console.log(JSON.stringify(result, null, 2));
 	process.exitCode = result.success ? 0 : 1;
